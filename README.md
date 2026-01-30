@@ -1,4 +1,4 @@
-# My Pipesim-like App
+# My Pipe-simulation App
 
 A simple PyQt6 app for building and simulating a pipe network (single phase).
 
