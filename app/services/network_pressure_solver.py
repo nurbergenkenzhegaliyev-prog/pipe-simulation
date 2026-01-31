@@ -31,9 +31,8 @@ class NetworkPressureSolver:
                 next_node = network.nodes[pipe.end_node]
 
                 if next_node.pressure is None and node.pressure is not None:
-                    upstream_pressure = node.pressure
-                    if getattr(node, "is_pump", False) and getattr(node, "pressure_ratio", None) is not None:
-                        upstream_pressure = node.pressure * node.pressure_ratio
+                    pump_gain = self.dp_service.calculate_node_pressure_gain(node, node.pressure)
+                    upstream_pressure = node.pressure + pump_gain
                     next_node.pressure = upstream_pressure - dp
                     queue.append(next_node.id)
 

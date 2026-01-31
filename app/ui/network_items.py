@@ -186,9 +186,26 @@ class PipeItem(QGraphicsLineItem):
 
         chosen = menu.exec(event.screenPos())
         if chosen == edit_action:
-            dlg = PipePropertiesDialog(self.length, self.diameter, self.roughness, self.flow_rate)
+            # Check if multi-phase mode is enabled
+            is_multiphase = False
+            if self.scene() and hasattr(self.scene(), 'current_fluid'):
+                is_multiphase = self.scene().current_fluid.is_multiphase if self.scene().current_fluid else False
+            
+            liquid_flow = getattr(self, 'liquid_flow_rate', 0.0) or 0.0
+            gas_flow = getattr(self, 'gas_flow_rate', 0.0) or 0.0
+            
+            dlg = PipePropertiesDialog(
+                self.length, self.diameter, self.roughness, self.flow_rate,
+                is_multiphase, liquid_flow, gas_flow
+            )
             if dlg.exec():
-                self.length, self.diameter, self.roughness, self.flow_rate = dlg.values()
+                length, diameter, roughness, flow_rate, liquid_flow_rate, gas_flow_rate = dlg.values()
+                self.length = length
+                self.diameter = diameter
+                self.roughness = roughness
+                self.flow_rate = flow_rate
+                self.liquid_flow_rate = liquid_flow_rate
+                self.gas_flow_rate = gas_flow_rate
                 self._update_tooltip()
 
         event.accept()

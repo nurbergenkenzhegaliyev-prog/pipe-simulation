@@ -25,6 +25,9 @@ class NetworkScene(QGraphicsScene):
 
         # for PIPE tool
         self._pipe_start_node = None
+        
+        # Fluid settings (will be set by main window)
+        self.current_fluid = None
 
     # ---------- API FROM UI ----------
     def set_tool(self, tool: Tool):

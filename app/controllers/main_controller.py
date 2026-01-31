@@ -13,6 +13,10 @@ class MainController:
         # temporary defaults; later from UI dialogs
         self.fluid = Fluid()
 
+    def set_fluid(self, fluid: Fluid):
+        """Update the fluid properties used for simulations"""
+        self.fluid = fluid
+
     def build_network_from_scene(self) -> PipeNetwork:
         network = PipeNetwork()
 
@@ -40,6 +44,8 @@ class MainController:
                 diameter=pipe_item.diameter,
                 roughness=getattr(pipe_item, "roughness", 0.005),
                 flow_rate=getattr(pipe_item, "flow_rate", 0.05),
+                liquid_flow_rate=getattr(pipe_item, "liquid_flow_rate", None),
+                gas_flow_rate=getattr(pipe_item, "gas_flow_rate", None),
                 pump_curve=getattr(pipe_item, "pump_curve", None),
                 valve=getattr(pipe_item, "valve", None),
             )

@@ -8,8 +8,10 @@ from PyQt6.QtCore import Qt, QPointF
 
 from app.ui.tool_palette import Tool
 from app.models.equipment import PumpCurve, Valve
+from app.models.fluid import Fluid
 from app.controllers.main_controller import MainController
 from app.ui.components import TopTabsWidget, LeftPanelWidget, WorkspaceWidget, ResultsView
+from app.ui.dialogs import FluidPropertiesDialog
 
 
 class MainWindow(QMainWindow):
@@ -19,6 +21,9 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("My Pipesim-like App")
         self.resize(1400, 800)
 
+        # Initialize default fluid (single-phase water) BEFORE creating layout
+        self.current_fluid = Fluid()
+        
         self.top_tabs = TopTabsWidget(self)
         self.setMenuWidget(self.top_tabs)
 
@@ -31,6 +36,7 @@ class MainWindow(QMainWindow):
         self.top_tabs.open_clicked.connect(self._open_json)
         self.top_tabs.save_as_clicked.connect(self._save_as_json)
         self.top_tabs.import_clicked.connect(self._open_json)
+        self.top_tabs.fluid_settings_clicked.connect(self._show_fluid_settings)
 
         self.results_view = ResultsView()
         self.results_dialog = None
@@ -59,6 +65,9 @@ class MainWindow(QMainWindow):
         self.controller = MainController(self.scene)
         self.scene.nodes_changed.connect(lambda: self.left_panel.refresh_from_scene(self.scene))
         self.left_panel.refresh_from_scene(self.scene)
+        
+        # Link fluid settings to scene so items can access it
+        self.scene.current_fluid = self.current_fluid
 
     def _show_results(self):
         if self.results_dialog is None:
@@ -70,6 +79,20 @@ class MainWindow(QMainWindow):
         self.results_dialog.show()
         self.results_dialog.raise_()
         self.results_dialog.activateWindow()
+
+    def _show_fluid_settings(self):
+        """Show the fluid properties dialog"""
+        dialog = FluidPropertiesDialog(self.current_fluid, self)
+        if dialog.exec() == QDialog.DialogCode.Accepted:
+            self.current_fluid = dialog.get_fluid()
+            
+            # Update status bar to show current mode
+            mode = "Multi-Phase" if self.current_fluid.is_multiphase else "Single-Phase"
+            self.statusBar().showMessage(f"Fluid settings updated: {mode} mode", 3000)
+            
+            # Update controller and scene with new fluid
+            self.controller.set_fluid(self.current_fluid)
+            self.scene.current_fluid = self.current_fluid
 
     def _serialize_scene(self):
         nodes = []
@@ -218,8 +241,18 @@ class MainWindow(QMainWindow):
                 errors.append(f"{pipe.pipe_id}: length must be > 0.")
             if pipe.diameter <= 0:
                 errors.append(f"{pipe.pipe_id}: diameter must be > 0.")
-            if pipe.flow_rate is None or pipe.flow_rate <= 0:
-                errors.append(f"{pipe.pipe_id}: flow rate must be > 0.")
+            
+            # Validate flow rates based on fluid mode
+            if self.current_fluid.is_multiphase:
+                liquid_flow = getattr(pipe, 'liquid_flow_rate', None)
+                gas_flow = getattr(pipe, 'gas_flow_rate', None)
+                if liquid_flow is None or gas_flow is None:
+                    errors.append(f"{pipe.pipe_id}: liquid and gas flow rates required for multi-phase mode.")
+                elif liquid_flow <= 0 and gas_flow <= 0:
+                    errors.append(f"{pipe.pipe_id}: at least one flow rate must be > 0.")
+            else:
+                if pipe.flow_rate is None or pipe.flow_rate <= 0:
+                    errors.append(f"{pipe.pipe_id}: flow rate must be > 0.")
 
         if errors:
             QMessageBox.warning(self, "Validation issues", "\n".join(errors))

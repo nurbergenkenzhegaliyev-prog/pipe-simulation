@@ -13,6 +13,7 @@ class TopTabsWidget(QTabWidget):
     save_as_clicked = pyqtSignal()
     import_clicked = pyqtSignal()
     new_clicked = pyqtSignal()
+    fluid_settings_clicked = pyqtSignal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -54,11 +55,18 @@ class TopTabsWidget(QTabWidget):
             self.style().standardIcon(QStyle.StandardPixmap.SP_FileDialogContentsView), "Results"
         )
 
+        settings_group, settings_toolbar = self._create_toolbar_group("Settings")
+        fluid_action = settings_toolbar.addAction(
+            self.style().standardIcon(QStyle.StandardPixmap.SP_FileDialogInfoView), "Fluid"
+        )
+
         self._mark_inactive_action(file_toolbar, new_action)
 
         home_layout.addWidget(file_group)
         home_layout.addWidget(self._create_vertical_divider())
         home_layout.addWidget(run_group)
+        home_layout.addWidget(self._create_vertical_divider())
+        home_layout.addWidget(settings_group)
         home_layout.addStretch(1)
 
         insert_tab = QWidget()
@@ -126,6 +134,7 @@ class TopTabsWidget(QTabWidget):
         import_action.triggered.connect(self.import_clicked)
         run_action.triggered.connect(self.run_clicked)
         results_action.triggered.connect(self.results_clicked)
+        fluid_action.triggered.connect(self.fluid_settings_clicked)
 
     def _create_toolbar_group(self, title):
         container = QFrame()

@@ -1,0 +1,23 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"chat.tools.terminal.autoApprove": {
+			"/^cd \"d:\\\\3\\. Programming\\\\pipe-simulation\" ; python -m pytest tests/ -v$/": {
+				"approve": true,
+				"matchCommandLine": true
+			},
+			"/^cd \"d:\\\\3\\. Programming\\\\pipe-simulation\" ; python run\\.py$/": {
+				"approve": true,
+				"matchCommandLine": true
+			},
+			"/^cd \"d:\\\\3\\. Programming\\\\pipe-simulation\" ; python -c \"from app\\.services\\.pressure_drop_service import PressureDropService; from app\\.models\\.fluid import Fluid; f = Fluid\\(\\); s = PressureDropService\\(f\\); print\\('Single-phase ok'\\); f2 = Fluid\\(is_multiphase=True\\); s2 = PressureDropService\\(f2\\); print\\('Multi-phase ok'\\)\"$/": {
+				"approve": true,
+				"matchCommandLine": true
+			}
+		}
+	}
+}
