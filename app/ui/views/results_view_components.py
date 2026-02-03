@@ -152,7 +152,13 @@ class ResultsUpdater:
         
         # Get start node pressure
         start_node = network.nodes.get(pipe.start_node)
-        start_pressure = getattr(start_node, "pressure", 0.0) if start_node else 0.0
+        start_pressure = getattr(start_node, "pressure", None) if start_node else None
+        
+        # If no pressure is available, don't show detailed analysis
+        if start_pressure is None:
+            tables.flowline_detail_table.setRowCount(0)
+            return
+        
         pipe_flow_rate = getattr(pipe, "flow_rate", None)
         
         # Analyze pipe at multiple points

@@ -9,10 +9,13 @@ from app.ui.commands.scene_commands import (
     AddNodeCommand, DeleteNodeCommand, AddPipeCommand, DeletePipeCommand,
     AddPumpCommand, AddValveCommand
 )
+from app.ui.validation.realtime_validator import RealtimeNetworkValidator
+from app.ui.validation.validation_visualizer import ValidationVisualizer
 
 
 class NetworkScene(QGraphicsScene):
     nodes_changed = pyqtSignal()
+    validation_changed = pyqtSignal(object)  # Emits validation issues list
 
     def __init__(self):
         super().__init__()
@@ -30,6 +33,10 @@ class NetworkScene(QGraphicsScene):
         
         # Command manager for undo/redo
         self.command_manager = CommandManager()
+        
+        # Real-time validation
+        self.validator = RealtimeNetworkValidator()
+        self.nodes_changed.connect(self._on_network_changed)
 
         # for PIPE tool
         self._pipe_start_node = None
@@ -49,6 +56,17 @@ class NetworkScene(QGraphicsScene):
             self._delete_selected()
             return
         super().keyPressEvent(event)
+    
+    def _on_network_changed(self):
+        """Run validation whenever network changes"""
+        try:
+            issues = self.validator.validate(self)
+            problematic_items = self.validator.get_problematic_items()
+            ValidationVisualizer.apply_highlights(self, problematic_items)
+            self.validation_changed.emit(issues)
+        except Exception:
+            # Silently handle validation errors during initialization
+            pass
 
     # ---------- MOUSE ----------
     def mousePressEvent(self, event):

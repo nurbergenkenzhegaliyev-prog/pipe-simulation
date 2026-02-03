@@ -76,6 +76,7 @@ class MainWindow(QMainWindow):
         self.scene = self.workspace.scene
         self.controller = MainController(self.scene)
         self.scene.nodes_changed.connect(lambda: self.left_panel.refresh_from_scene(self.scene))
+        self.scene.validation_changed.connect(self._on_validation_changed)
         self.left_panel.refresh_from_scene(self.scene)
         
         # Link fluid settings to scene so items can access it
@@ -169,6 +170,26 @@ class MainWindow(QMainWindow):
         status = QStatusBar()
         status.showMessage("Workspace ready.")
         self.setStatusBar(status)
+    
+    def _on_validation_changed(self, issues):
+        """Update status bar with validation feedback"""
+        if not issues:
+            self.statusBar().showMessage("✓ Network ready for simulation", 5000)
+            return
+        
+        # Count errors and warnings
+        error_count = sum(1 for i in issues if hasattr(i, 'level') and i.level.name == 'ERROR')
+        warning_count = sum(1 for i in issues if hasattr(i, 'level') and i.level.name == 'WARNING')
+        
+        message_parts = []
+        if error_count > 0:
+            message_parts.append(f"⚠ {error_count} error{'s' if error_count != 1 else ''}")
+        if warning_count > 0:
+            message_parts.append(f"⚠ {warning_count} warning{'s' if warning_count != 1 else ''}")
+        
+        message = " | ".join(message_parts) if message_parts else "Network has issues"
+        self.statusBar().showMessage(message)
+    
     
     # ---------------- SHORTCUTS ----------------
     def _create_shortcuts(self):

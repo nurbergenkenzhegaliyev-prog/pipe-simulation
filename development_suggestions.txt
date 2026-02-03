@@ -30,3 +30,84 @@ Here are some practical suggestions to further develop the pipe-simulation appli
    - **Configuration Management**: Add a settings file (e.g., via configparser) for user preferences like default fluid properties or solver tolerances.
 
 These suggestions prioritize incremental improvements that align with the app's engineering focus. Start with UI enhancements or testing for quick wins, then tackle simulation expansions. If you'd like me to implement any specific suggestion, provide more details!
+
+---
+
+## Prioritized Development Roadmap (February 2026)
+
+### ✅ COMPLETED (This Session)
+- **PipeSim-Style Flow Model**: Sources/sinks with boundary conditions
+- **Color-Coded Visualizations**: Pressure and flow overlays
+- **CSV Export**: Results export to CSV for nodes, pipes, and summary
+- **Undo/Redo System**: Full command pattern implementation (Ctrl+Z/Y)
+
+### 🎯 HIGH IMPACT, MEDIUM EFFORT (Recommended Next)
+
+**1. Real-Time Validation & Feedback**
+   - Highlight invalid connections as users build (red outlines)
+   - Live feedback on network readiness for simulation
+   - Auto-highlight incompatible node types
+   - *Why:* Huge UX improvement, prevents simulation errors
+
+**2. Enhanced Results Visualization**
+   - Add PDF export of simulation results (reportlab)
+   - Add charts/graphs: pressure profiles, flow distributions (matplotlib/PyQtChart)
+   - Add heat maps on pipes showing velocity or pressure drop
+   - *Why:* Professional presentation, better understanding
+
+**3. Flow Direction Arrows on Pipes**
+   - Visual arrows showing calculated flow direction
+   - Updates dynamically after simulation
+   - *Why:* Quick visual understanding of network behavior
+
+### 💪 MEDIUM IMPACT, MEDIUM EFFORT
+
+**4. Comprehensive Testing**
+   - Unit tests for solvers with pytest fixtures
+   - Integration tests for GUI workflows
+   - Performance benchmarks for large networks
+   - *Why:* Code quality, catch regressions
+
+**5. Advanced Equipment Models**
+   - Realistic pump curves from manufacturer data
+   - Valve types with Cv ratings
+   - Tanks/reservoirs with dynamic behavior
+   - *Why:* More realistic engineering simulations
+
+**6. Data Import/Export Enhancements**
+   - Support EPANET INP format import
+   - Export to CAD software formats
+   - SQLite database for model versioning
+   - *Why:* Better interoperability with industry tools
+
+### 🚀 LOWER PRIORITY, HIGH VALUE
+
+**7. Transient Analysis**
+   - Time-dependent simulations (pump startup/shutdown)
+   - Animated pressure/flow changes over time
+   - *Why:* Advanced capability for specialized use cases
+
+**8. Optimization Tools**
+   - Network optimization (minimize pump power, balance flows)
+   - Constraint-based solving with SciPy
+   - *Why:* High value for design engineers
+
+**9. Web API/Remote Simulation**
+   - Flask/FastAPI REST API for remote simulations
+   - Streamlit web interface
+   - *Why:* Accessibility and remote access
+
+### 🏗️ INFRASTRUCTURE (For Production)
+
+**10. Packaging & Deployment**
+   - PyInstaller executables for Windows/Mac
+   - GitHub Actions CI/CD pipeline
+   - Automated testing and releases
+   - *Why:* Makes app distributable to end users
+
+---
+
+## Top 3 Recommended Next Steps
+1. **Real-Time Validation** → Quick win, huge UX impact
+2. **Enhanced Charts & Visualization** → Professional results presentation
+3. **Comprehensive Testing** → Ensures stability for future development

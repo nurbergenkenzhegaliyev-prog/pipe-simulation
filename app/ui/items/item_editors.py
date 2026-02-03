@@ -64,6 +64,11 @@ def edit_pipe_properties(pipe: "PipeItem") -> None:
         pipe.liquid_flow_rate = liquid_flow_rate
         pipe.gas_flow_rate = gas_flow_rate
         pipe._update_tooltip()
+        
+        # Trigger validation update
+        scene = pipe.scene()
+        if scene is not None and hasattr(scene, "nodes_changed"):
+            scene.nodes_changed.emit()
 
 
 def edit_pump_properties(pump: "PumpItem") -> None:
@@ -72,6 +77,11 @@ def edit_pump_properties(pump: "PumpItem") -> None:
         pump.pressure_ratio = dlg.value()
         pump.update_label(None)
         pump._update_tooltip()
+        
+        # Trigger validation update
+        scene = pump.scene()
+        if scene is not None and hasattr(scene, "nodes_changed"):
+            scene.nodes_changed.emit()
 
 
 def edit_valve_properties(valve: "ValveItem") -> None:
@@ -80,3 +90,8 @@ def edit_valve_properties(valve: "ValveItem") -> None:
         valve.valve_k = dlg.value()
         valve.update_label(None)
         valve._update_tooltip()
+        
+        # Trigger validation update
+        scene = valve.scene()
+        if scene is not None and hasattr(scene, "nodes_changed"):
+            scene.nodes_changed.emit()
