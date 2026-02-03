@@ -5,6 +5,7 @@ from PyQt6.QtWidgets import (
     QStatusBar, QMessageBox, QDialog, QFileDialog
 )
 from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QAction, QKeySequence
 
 from app.ui.tooling.tool_types import Tool
 from app.models.fluid import Fluid
@@ -14,6 +15,7 @@ from app.ui.dialogs import FluidPropertiesDialog
 from app.ui.windows.main_window_components import ResultsDialogManager, SceneSerializer, SceneValidator
 from app.services.pressure_drop_service import PressureDropService
 from app.services.pipe_point_analyzer import PipePointAnalyzer
+from app.ui.visualization.network_visualizer import NetworkVisualizer
 
 
 class MainWindow(QMainWindow):
@@ -31,6 +33,7 @@ class MainWindow(QMainWindow):
 
         self._create_central_layout()
         self._create_statusbar()
+        self._create_shortcuts()
 
         self.top_tabs.tool_changed.connect(self._on_tool_changed)
         self.top_tabs.run_clicked.connect(self._on_run_clicked)
@@ -145,7 +148,12 @@ class MainWindow(QMainWindow):
             network = self.controller.run_network_simulation()
             self.scene.apply_results(network)
             self.results_view.update_results(network)
-            self.statusBar().showMessage("Simulation complete.", 5000)
+            
+            # Apply color overlays
+            NetworkVisualizer.apply_pressure_overlay(self.scene, network)
+            NetworkVisualizer.apply_flow_overlay(self.scene, network)
+            
+            self.statusBar().showMessage("Simulation complete. Network colored by pressure and flow.", 5000)
         except Exception as exc:
             QMessageBox.critical(self, "Simulation failed", str(exc))
 
@@ -161,3 +169,36 @@ class MainWindow(QMainWindow):
         status = QStatusBar()
         status.showMessage("Workspace ready.")
         self.setStatusBar(status)
+    
+    # ---------------- SHORTCUTS ----------------
+    def _create_shortcuts(self):
+        """Create keyboard shortcuts for undo/redo"""
+        # Undo: Ctrl+Z
+        undo_action = QAction("Undo", self)
+        undo_action.setShortcut(QKeySequence.StandardKey.Undo)
+        undo_action.triggered.connect(self._undo)
+        self.addAction(undo_action)
+        
+        # Redo: Ctrl+Y or Ctrl+Shift+Z
+        redo_action = QAction("Redo", self)
+        redo_action.setShortcut(QKeySequence.StandardKey.Redo)
+        redo_action.triggered.connect(self._redo)
+        self.addAction(redo_action)
+    
+    def _undo(self):
+        """Undo the last action"""
+        if self.scene.command_manager.can_undo():
+            description = self.scene.command_manager.undo()
+            if description:
+                self.statusBar().showMessage(f"Undo: {description}", 3000)
+        else:
+            self.statusBar().showMessage("Nothing to undo", 2000)
+    
+    def _redo(self):
+        """Redo the last undone action"""
+        if self.scene.command_manager.can_redo():
+            description = self.scene.command_manager.redo()
+            if description:
+                self.statusBar().showMessage(f"Redo: {description}", 3000)
+        else:
+            self.statusBar().showMessage("Nothing to redo", 2000)

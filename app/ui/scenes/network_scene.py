@@ -4,6 +4,11 @@ from PyQt6.QtCore import Qt, pyqtSignal, QPointF
 from app.ui.tooling.tool_types import Tool
 from app.ui.items.network_items import NodeItem, PipeItem, PumpItem, ValveItem
 from app.ui.scenes.scene_components import NetworkResultApplier, NodeOperations, PipeOperations, SceneCounters
+from app.ui.commands.command_manager import CommandManager
+from app.ui.commands.scene_commands import (
+    AddNodeCommand, DeleteNodeCommand, AddPipeCommand, DeletePipeCommand,
+    AddPumpCommand, AddValveCommand
+)
 
 
 class NetworkScene(QGraphicsScene):
@@ -22,6 +27,9 @@ class NetworkScene(QGraphicsScene):
         self._node_ops = NodeOperations(self, self.nodes, self._counters, self.nodes_changed.emit)
         self._pipe_ops = PipeOperations(self, self.pipes, self._counters, self.nodes_changed.emit)
         self._result_applier = NetworkResultApplier(self.nodes, self.pipes)
+        
+        # Command manager for undo/redo
+        self.command_manager = CommandManager()
 
         # for PIPE tool
         self._pipe_start_node = None
@@ -52,23 +60,24 @@ class NetworkScene(QGraphicsScene):
             # --- NODE TOOL ---
             if self.current_tool == Tool.NODE:
                 if not isinstance(item, NodeItem):
-                    self._create_node(pos)
+                    cmd = AddNodeCommand(self, pos)
+                    self.command_manager.execute(cmd)
 
             # --- SOURCE TOOL ---
             elif self.current_tool == Tool.SOURCE:
                 if isinstance(item, NodeItem):
                     self._make_source(item)
                 else:
-                    node = self._create_node(pos, is_source=True)
-                    self._make_source(node)
+                    cmd = AddNodeCommand(self, pos, is_source=True)
+                    self.command_manager.execute(cmd)
 
             # --- SINK TOOL ---
             elif self.current_tool == Tool.SINK:
                 if isinstance(item, NodeItem):
                     self._make_sink(item)
                 else:
-                    node = self._create_node(pos, is_sink=True)
-                    self._make_sink(node)
+                    cmd = AddNodeCommand(self, pos, is_sink=True)
+                    self.command_manager.execute(cmd)
 
             # --- PIPE TOOL ---
             elif self.current_tool == Tool.PIPE:
@@ -78,12 +87,14 @@ class NetworkScene(QGraphicsScene):
             # --- PUMP TOOL ---
             elif self.current_tool == Tool.PUMP:
                 if not isinstance(item, NodeItem):
-                    self._create_pump(pos)
+                    cmd = AddPumpCommand(self, pos)
+                    self.command_manager.execute(cmd)
 
             # --- VALVE TOOL ---
             elif self.current_tool == Tool.VALVE:
                 if not isinstance(item, NodeItem):
-                    self._create_valve(pos)
+                    cmd = AddValveCommand(self, pos)
+                    self.command_manager.execute(cmd)
 
             # --- SELECT TOOL ---
             else:
@@ -141,12 +152,14 @@ class NetworkScene(QGraphicsScene):
         # Remove pipes first
         for item in selected:
             if isinstance(item, PipeItem):
-                self._remove_pipe(item)
+                cmd = DeletePipeCommand(self, item)
+                self.command_manager.execute(cmd)
 
         # Remove nodes (also removes any attached pipes)
         for item in selected:
             if isinstance(item, NodeItem):
-                self._remove_node(item)
+                cmd = DeleteNodeCommand(self, item)
+                self.command_manager.execute(cmd)
 
     def _remove_pipe(self, pipe: PipeItem):
         self._pipe_ops.remove_pipe(pipe)
@@ -156,8 +169,16 @@ class NetworkScene(QGraphicsScene):
 
     # ---------- PIPE LOGIC ----------
     def _handle_pipe_click(self, node: NodeItem):
-        self._pipe_ops.handle_pipe_click(node)
-        self._pipe_start_node = self._pipe_ops.pipe_start_node
+        # Handle pipe creation with command pattern
+        if self._pipe_start_node is None:
+            self._pipe_start_node = node
+            self._pipe_ops.pipe_start_node = node
+        else:
+            if node != self._pipe_start_node:
+                cmd = AddPipeCommand(self, self._pipe_start_node, node)
+                self.command_manager.execute(cmd)
+            self._pipe_start_node = None
+            self._pipe_ops.reset_pipe_builder()
 
     def _add_pump(self, pipe: PipeItem):
         self._pipe_ops.add_pump(pipe)

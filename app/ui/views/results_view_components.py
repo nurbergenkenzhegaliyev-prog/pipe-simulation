@@ -45,8 +45,9 @@ class ResultsTableBuilder:
 
 
 class ResultsViewLayout:
-    def __init__(self, parent: QWidget, tables: ResultsTables):
-        layout = QVBoxLayout(parent)
+    def __init__(self, parent: QWidget, tables: ResultsTables, main_layout: QVBoxLayout = None):
+        if main_layout is None:
+            main_layout = QVBoxLayout(parent)
         
         # Create tab widget
         tabs = QTabWidget(parent)
@@ -69,7 +70,7 @@ class ResultsViewLayout:
         flowlines_layout.addWidget(splitter)
         tabs.addTab(flowlines_tab, "Flowlines")
         
-        layout.addWidget(tabs)
+        main_layout.addWidget(tabs)
 
 
 class ResultsUpdater:

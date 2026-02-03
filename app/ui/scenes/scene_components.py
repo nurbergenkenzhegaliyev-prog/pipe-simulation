@@ -194,6 +194,16 @@ class PipeOperations:
     def reset_pipe_builder(self) -> None:
         self.pipe_start_node = None
 
+    def create_pipe(self, node1: NodeItem, node2: NodeItem) -> PipeItem:
+        """Create a pipe between two nodes with auto-generated ID"""
+        pipe_id = self._counters.next_pipe_id()
+        pipe = PipeItem(node1, node2, pipe_id)
+        self._scene.addItem(pipe)
+        self._pipes.append(pipe)
+        pipe.attach_label_to_scene()
+        self._on_changed()
+        return pipe
+
     def handle_pipe_click(self, node: NodeItem) -> None:
         if self.pipe_start_node is None:
             self.pipe_start_node = node

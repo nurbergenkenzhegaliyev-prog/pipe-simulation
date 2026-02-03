@@ -7,9 +7,9 @@ Here are some practical suggestions to further develop the pipe-simulation appli
    - **Thermal Effects**: Incorporate heat transfer calculations (e.g., via Fourier's law) to model temperature changes, useful for hot water systems or cooling networks. Update the `Fluid` class with thermal properties.
 
 ### 2. **Improve User Interface and Visualization**
-   - **Enhanced Graphics**: Add color-coded pressure/flow overlays on pipes/nodes, flow direction arrows, and interactive tooltips showing real-time values. Use PyQt's QGraphicsView for better zooming/panning and implement grid snapping for precise drawing.
-   - **Results Export and Reporting**: Enable exporting simulation results to CSV, PDF reports, or images. Add a results dashboard with charts (using matplotlib or PyQtChart) for pressure profiles and flow distributions.
-   - **Undo/Redo and Editing Tools**: Implement a command pattern for reversible actions (e.g., adding/removing components), improving usability for iterative design.
+   - **Enhanced Graphics**: ✅ COMPLETED - Added color-coded pressure/flow overlays on pipes/nodes with smart color scaling (blue→red for pressure, green→red for flow). Flow direction arrows and grid snapping can be added next. Use PyQt's QGraphicsView for better zooming/panning.
+   - **Results Export and Reporting**: ✅ COMPLETED - CSV export enabled for nodes, pipes, and network summary. PDF reports and charts (using matplotlib or PyQtChart) for pressure profiles and flow distributions can be added next.
+   - **Undo/Redo and Editing Tools**: ✅ COMPLETED - Implemented command pattern for reversible actions (adding/removing nodes, pipes, pumps, valves). Supports Ctrl+Z (undo) and Ctrl+Y/Ctrl+Shift+Z (redo) with 50-action history.
    - **Real-Time Feedback**: Provide live validation (e.g., highlight invalid connections) and auto-calculation previews as users build the network.
 
 ### 3. **Strengthen Code Quality and Testing**
