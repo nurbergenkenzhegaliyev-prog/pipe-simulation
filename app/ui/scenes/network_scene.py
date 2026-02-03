@@ -1,0 +1,200 @@
+from PyQt6.QtWidgets import QGraphicsScene
+from PyQt6.QtCore import Qt, pyqtSignal, QPointF
+
+from app.ui.tooling.tool_types import Tool
+from app.ui.items.network_items import NodeItem, PipeItem, PumpItem, ValveItem
+from app.ui.scenes.scene_components import NetworkResultApplier, NodeOperations, PipeOperations, SceneCounters
+
+
+class NetworkScene(QGraphicsScene):
+    nodes_changed = pyqtSignal()
+
+    def __init__(self):
+        super().__init__()
+        self.setSceneRect(-2000, -2000, 4000, 4000)
+
+        self.current_tool = Tool.SELECT
+
+        self.nodes = []
+        self.pipes = []
+
+        self._counters = SceneCounters()
+        self._node_ops = NodeOperations(self, self.nodes, self._counters, self.nodes_changed.emit)
+        self._pipe_ops = PipeOperations(self, self.pipes, self._counters, self.nodes_changed.emit)
+        self._result_applier = NetworkResultApplier(self.nodes, self.pipes)
+
+        # for PIPE tool
+        self._pipe_start_node = None
+        
+        # Fluid settings (will be set by main window)
+        self.current_fluid = None
+
+    # ---------- API FROM UI ----------
+    def set_tool(self, tool: Tool):
+        self.current_tool = tool
+        self._pipe_start_node = None
+        self._pipe_ops.reset_pipe_builder()
+        self.clearSelection()
+
+    def keyPressEvent(self, event):
+        if event.key() in (Qt.Key.Key_Delete, Qt.Key.Key_Backspace):
+            self._delete_selected()
+            return
+        super().keyPressEvent(event)
+
+    # ---------- MOUSE ----------
+    def mousePressEvent(self, event):
+        pos = event.scenePos()
+        item = self.itemAt(pos, self.views()[0].transform())
+
+        if event.button() == Qt.MouseButton.LeftButton:
+
+            # --- NODE TOOL ---
+            if self.current_tool == Tool.NODE:
+                if not isinstance(item, NodeItem):
+                    self._create_node(pos)
+
+            # --- SOURCE TOOL ---
+            elif self.current_tool == Tool.SOURCE:
+                if isinstance(item, NodeItem):
+                    self._make_source(item)
+                else:
+                    node = self._create_node(pos, is_source=True)
+                    self._make_source(node)
+
+            # --- SINK TOOL ---
+            elif self.current_tool == Tool.SINK:
+                if isinstance(item, NodeItem):
+                    self._make_sink(item)
+                else:
+                    node = self._create_node(pos, is_sink=True)
+                    self._make_sink(node)
+
+            # --- PIPE TOOL ---
+            elif self.current_tool == Tool.PIPE:
+                if isinstance(item, NodeItem):
+                    self._handle_pipe_click(item)
+
+            # --- PUMP TOOL ---
+            elif self.current_tool == Tool.PUMP:
+                if not isinstance(item, NodeItem):
+                    self._create_pump(pos)
+
+            # --- VALVE TOOL ---
+            elif self.current_tool == Tool.VALVE:
+                if not isinstance(item, NodeItem):
+                    self._create_valve(pos)
+
+            # --- SELECT TOOL ---
+            else:
+                super().mousePressEvent(event)
+                return
+
+        super().mousePressEvent(event)
+
+    # ---------- NODE HELPERS ----------
+    def _create_node(self, pos, is_source: bool = False, is_sink: bool = False) -> NodeItem:
+        return self._node_ops.create_node(pos, is_source=is_source, is_sink=is_sink)
+
+    def _create_pump(self, pos) -> PumpItem:
+        return self._node_ops.create_pump(pos)
+
+    def _create_valve(self, pos) -> ValveItem:
+        return self._node_ops.create_valve(pos)
+
+    def create_node_with_id(
+        self,
+        pos: QPointF,
+        node_id: str,
+        is_source: bool = False,
+        is_sink: bool = False,
+        pressure: float | None = None,
+        flow_rate: float | None = None,
+        is_pump: bool = False,
+        is_valve: bool = False,
+        pressure_ratio: float | None = None,
+        valve_k: float | None = None,
+    ) -> NodeItem:
+        return self._node_ops.create_node_with_id(
+            pos,
+            node_id,
+            is_source=is_source,
+            is_sink=is_sink,
+            pressure=pressure,
+            flow_rate=flow_rate,
+            is_pump=is_pump,
+            is_valve=is_valve,
+            pressure_ratio=pressure_ratio,
+            valve_k=valve_k,
+        )
+
+    def _make_source(self, node: NodeItem):
+        self._node_ops.make_source(node)
+
+    def _make_sink(self, node: NodeItem):
+        self._node_ops.make_sink(node)
+
+    # ---------- DELETE ----------
+    def _delete_selected(self):
+        selected = list(self.selectedItems())
+
+        # Remove pipes first
+        for item in selected:
+            if isinstance(item, PipeItem):
+                self._remove_pipe(item)
+
+        # Remove nodes (also removes any attached pipes)
+        for item in selected:
+            if isinstance(item, NodeItem):
+                self._remove_node(item)
+
+    def _remove_pipe(self, pipe: PipeItem):
+        self._pipe_ops.remove_pipe(pipe)
+
+    def _remove_node(self, node: NodeItem):
+        self._node_ops.remove_node(node, self._pipe_ops.remove_pipe)
+
+    # ---------- PIPE LOGIC ----------
+    def _handle_pipe_click(self, node: NodeItem):
+        self._pipe_ops.handle_pipe_click(node)
+        self._pipe_start_node = self._pipe_ops.pipe_start_node
+
+    def _add_pump(self, pipe: PipeItem):
+        self._pipe_ops.add_pump(pipe)
+
+    def _add_valve(self, pipe: PipeItem):
+        self._pipe_ops.add_valve(pipe)
+
+    def create_pipe_with_id(
+        self,
+        node1: NodeItem,
+        node2: NodeItem,
+        pipe_id: str,
+        length: float | None = None,
+        diameter: float | None = None,
+        roughness: float | None = None,
+        flow_rate: float | None = None,
+    ) -> PipeItem:
+        return self._pipe_ops.create_pipe_with_id(
+            node1,
+            node2,
+            pipe_id,
+            length=length,
+            diameter=diameter,
+            roughness=roughness,
+            flow_rate=flow_rate,
+        )
+
+    def clear_network(self):
+        for pipe in list(self.pipes):
+            self._remove_pipe(pipe)
+        for node in list(self.nodes):
+            self._remove_node(node)
+        self._counters.reset()
+        self._pipe_start_node = None
+        self._pipe_ops.reset_pipe_builder()
+        self.nodes_changed.emit()
+
+    def apply_results(self, network):
+        self._result_applier.apply_results(network)
+

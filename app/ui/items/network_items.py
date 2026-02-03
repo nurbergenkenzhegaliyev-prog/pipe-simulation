@@ -6,7 +6,12 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtGui import QPen, QBrush, QFont
 from PyQt6.QtCore import Qt, QPointF
-from app.ui.dialogs import PipePropertiesDialog, NodePropertiesDialog, PumpPropertiesDialog, ValvePropertiesDialog
+from app.ui.items.item_editors import (
+    edit_node_properties,
+    edit_pipe_properties,
+    edit_pump_properties,
+    edit_valve_properties,
+)
 
 
 class NodeItem(QGraphicsEllipseItem):
@@ -30,6 +35,7 @@ class NodeItem(QGraphicsEllipseItem):
         self.pressure_ratio = None
         self.valve_k = None
         self.pressure = None  # Pa; only for sources
+        self.flow_rate = None  # m³/s; for sources (optional) and sinks (required)
         print("Created node:", node_id)
 
         # Label in the canvas
@@ -94,10 +100,20 @@ class NodeItem(QGraphicsEllipseItem):
             k_text = f"{k:.3f}" if k is not None else "n/a"
             self.setToolTip(f"{self.node_id}\nValve\nK = {k_text}")
         elif getattr(self, "is_source", False):
-            p = getattr(self, "pressure", 0.0) or 0.0
-            self.setToolTip(f"{self.node_id}\nSource\nP = {p:,.0f} Pa")
+            p = getattr(self, "pressure", None)
+            q = getattr(self, "flow_rate", None)
+            tooltip_text = f"{self.node_id}\nSource"
+            if p is not None:
+                tooltip_text += f"\nP = {p:,.0f} Pa"
+            if q is not None:
+                tooltip_text += f"\nQ = {q:.6f} m³/s"
+            self.setToolTip(tooltip_text)
         elif getattr(self, "is_sink", False):
-            self.setToolTip(f"{self.node_id}\nSink")
+            q = getattr(self, "flow_rate", None)
+            tooltip_text = f"{self.node_id}\nSink"
+            if q is not None:
+                tooltip_text += f"\nQ = {q:.6f} m³/s"
+            self.setToolTip(tooltip_text)
         else:
             self.setToolTip(f"{self.node_id}\nJunction")
 
@@ -107,20 +123,7 @@ class NodeItem(QGraphicsEllipseItem):
 
         chosen = menu.exec(event.screenPos())
         if chosen == edit_action:
-            dlg = NodePropertiesDialog(
-                is_source=getattr(self, "is_source", False),
-                is_sink=getattr(self, "is_sink", False),
-                pressure_pa=getattr(self, "pressure", None),
-            )
-            if dlg.exec():
-                self.is_source, self.is_sink, self.pressure = dlg.values()
-                if self.is_source and self.pressure is None:
-                    self.pressure = 10e6  # default if user leaves 0
-                self.update_label(self.pressure if self.is_source else None)
-                self._update_tooltip()
-                scene = self.scene()
-                if scene is not None and hasattr(scene, "nodes_changed"):
-                    scene.nodes_changed.emit()
+            edit_node_properties(self)
 
         event.accept()
 
@@ -186,27 +189,7 @@ class PipeItem(QGraphicsLineItem):
 
         chosen = menu.exec(event.screenPos())
         if chosen == edit_action:
-            # Check if multi-phase mode is enabled
-            is_multiphase = False
-            if self.scene() and hasattr(self.scene(), 'current_fluid'):
-                is_multiphase = self.scene().current_fluid.is_multiphase if self.scene().current_fluid else False
-            
-            liquid_flow = getattr(self, 'liquid_flow_rate', 0.0) or 0.0
-            gas_flow = getattr(self, 'gas_flow_rate', 0.0) or 0.0
-            
-            dlg = PipePropertiesDialog(
-                self.length, self.diameter, self.roughness, self.flow_rate,
-                is_multiphase, liquid_flow, gas_flow
-            )
-            if dlg.exec():
-                length, diameter, roughness, flow_rate, liquid_flow_rate, gas_flow_rate = dlg.values()
-                self.length = length
-                self.diameter = diameter
-                self.roughness = roughness
-                self.flow_rate = flow_rate
-                self.liquid_flow_rate = liquid_flow_rate
-                self.gas_flow_rate = gas_flow_rate
-                self._update_tooltip()
+            edit_pipe_properties(self)
 
         event.accept()
 
@@ -255,11 +238,7 @@ class PumpItem(NodeItem):
         edit_action = menu.addAction("Edit pump properties...")
         chosen = menu.exec(event.screenPos())
         if chosen == edit_action:
-            dlg = PumpPropertiesDialog(self.pressure_ratio or 1.0)
-            if dlg.exec():
-                self.pressure_ratio = dlg.value()
-                self.update_label(None)
-                self._update_tooltip()
+            edit_pump_properties(self)
         event.accept()
 
 
@@ -280,9 +259,5 @@ class ValveItem(NodeItem):
         edit_action = menu.addAction("Edit valve properties...")
         chosen = menu.exec(event.screenPos())
         if chosen == edit_action:
-            dlg = ValvePropertiesDialog(self.valve_k or 0.0)
-            if dlg.exec():
-                self.valve_k = dlg.value()
-                self.update_label(None)
-                self._update_tooltip()
+            edit_valve_properties(self)
         event.accept()

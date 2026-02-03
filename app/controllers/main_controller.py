@@ -26,6 +26,7 @@ class MainController:
             n = Node(
                 id=node_item.node_id,
                 pressure=getattr(node_item, "pressure", None),
+                flow_rate=getattr(node_item, "flow_rate", None),
                 is_source=getattr(node_item, "is_source", False),
                 is_sink=getattr(node_item, "is_sink", False),
                 is_pump=getattr(node_item, "is_pump", False),
