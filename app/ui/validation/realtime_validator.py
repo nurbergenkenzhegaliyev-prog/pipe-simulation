@@ -49,11 +49,11 @@ class RealtimeNetworkValidator:
         sources = [n for n in scene.nodes if getattr(n, "is_source", False)]
         sinks = [n for n in scene.nodes if getattr(n, "is_sink", False)]
         
-        # Check for at least one source or sink
-        if not sources and not sinks:
+        # Check for at least one source
+        if not sources:
             self._issues.append(ValidationIssue(
                 level=ValidationLevel.ERROR,
-                message="Network requires at least one source or sink",
+                message="Network requires at least one source",
                 item_type="network"
             ))
         

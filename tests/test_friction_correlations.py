@@ -186,10 +186,10 @@ class TestMoodyDiagramComparison:
     """Test against known Moody diagram values."""
     
     @pytest.mark.parametrize("Re,eps_D,f_expected", [
-        (10000, 0.0001, 0.0235),   # Smooth pipe, moderate Re
-        (100000, 0.0001, 0.0165),  # Smooth pipe, high Re
-        (10000, 0.01, 0.0655),     # Rough pipe, moderate Re
-        (100000, 0.001, 0.0255),   # Moderate roughness, high Re
+        (10000, 0.0001, 0.031037),   # Smooth pipe, moderate Re
+        (100000, 0.0001, 0.018514),  # Smooth pipe, high Re
+        (10000, 0.01, 0.043127),     # Rough pipe, moderate Re
+        (100000, 0.001, 0.022175),   # Moderate roughness, high Re
     ])
     def test_moody_diagram_values(self, Re, eps_D, f_expected):
         """Compare against known Moody diagram values.

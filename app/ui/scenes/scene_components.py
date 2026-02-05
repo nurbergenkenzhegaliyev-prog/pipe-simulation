@@ -85,6 +85,24 @@ class NodeOperations:
         self._on_changed()
         return node
 
+    def add_node(self, pos, node_id: str | None = None) -> NodeItem:
+        """Compatibility wrapper used by tests to add a node."""
+        if node_id:
+            return self.create_node_with_id(pos, node_id)
+        return self.create_node(pos)
+
+    def add_source(self, pos, node_id: str | None = None) -> NodeItem:
+        """Add a source node (compatibility wrapper)."""
+        if node_id:
+            return self.create_node_with_id(pos, node_id, is_source=True)
+        return self.create_node(pos, is_source=True)
+
+    def add_sink(self, pos, node_id: str | None = None) -> NodeItem:
+        """Add a sink node (compatibility wrapper)."""
+        if node_id:
+            return self.create_node_with_id(pos, node_id, is_sink=True)
+        return self.create_node(pos, is_sink=True)
+
     def create_pump(self, pos) -> PumpItem:
         node_id = self._counters.next_pump_id()
         node = PumpItem(pos, node_id)
@@ -203,6 +221,12 @@ class PipeOperations:
         pipe.attach_label_to_scene()
         self._on_changed()
         return pipe
+
+    def add_pipe(self, node1: NodeItem, node2: NodeItem, pipe_id: str | None = None) -> PipeItem:
+        """Compatibility wrapper used by tests to add a pipe."""
+        if pipe_id:
+            return self.create_pipe_with_id(node1, node2, pipe_id)
+        return self.create_pipe(node1, node2)
 
     def handle_pipe_click(self, node: NodeItem) -> None:
         if self.pipe_start_node is None:

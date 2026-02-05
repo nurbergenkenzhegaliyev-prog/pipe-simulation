@@ -71,7 +71,7 @@ class PipePointAnalyzer:
         if pipe.flow_rate is None or fraction == 0:
             return 0.0
         
-        rho = fluid.density
+        rho = fluid.effective_density()
         q = pipe.flow_rate
         area = pipe.area()
         v = q / area
@@ -82,7 +82,7 @@ class PipePointAnalyzer:
             diameter=pipe.diameter,
             roughness=pipe.roughness,
             rho=rho,
-            mu=fluid.viscosity,
+            mu=fluid.effective_viscosity(),
         )
         
         # Calculate pressure drop for the segment (Darcy-Weisbach)
@@ -91,6 +91,9 @@ class PipePointAnalyzer:
         
         # Add component losses only at the end
         if fraction == 1.0:
+            minor_k = getattr(pipe, "minor_loss_k", 0.0)
+            if minor_k:
+                dp += minor_k * (rho * v**2 / 2)
             if pipe.valve is not None:
                 dp += pipe.valve.pressure_drop(rho, v)
             

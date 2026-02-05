@@ -1,7 +1,18 @@
 """Quick test of validation system"""
 
+import pytest
+from PyQt6.QtWidgets import QApplication
+
 from app.ui.scenes.network_scene import NetworkScene
 from app.ui.validation.realtime_validator import RealtimeNetworkValidator, ValidationLevel
+
+
+@pytest.fixture(scope="session", autouse=True)
+def qapp():
+    app = QApplication.instance()
+    if app is None:
+        app = QApplication([])
+    return app
 
 def test_validation():
     """Test the validation system"""

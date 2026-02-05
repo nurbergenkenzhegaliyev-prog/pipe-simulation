@@ -45,6 +45,7 @@ class MainController:
                 diameter=pipe_item.diameter,
                 roughness=getattr(pipe_item, "roughness", 0.005),
                 flow_rate=getattr(pipe_item, "flow_rate", 0.05),
+                minor_loss_k=getattr(pipe_item, "minor_loss_k", 0.0),
                 liquid_flow_rate=getattr(pipe_item, "liquid_flow_rate", None),
                 gas_flow_rate=getattr(pipe_item, "gas_flow_rate", None),
                 pump_curve=getattr(pipe_item, "pump_curve", None),

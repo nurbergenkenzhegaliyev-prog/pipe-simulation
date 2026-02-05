@@ -1,5 +1,5 @@
 from PyQt6.QtWidgets import (
-    QDialog, QFormLayout, QCheckBox, QVBoxLayout, QLabel
+    QDialog, QFormLayout, QCheckBox, QVBoxLayout, QLabel, QComboBox
 )
 
 from app.ui.dialogs.components import (
@@ -10,9 +10,9 @@ from app.ui.dialogs.components import (
 
 
 class PipePropertiesDialog(QDialog):
-    def __init__(self, length_m: float, diameter_m: float, roughness: float, flow_rate: float, 
-                 is_multiphase: bool = False, liquid_flow_rate: float = 0.0, gas_flow_rate: float = 0.0,
-                 parent=None):
+    def __init__(self, length_m: float, diameter_m: float, roughness: float, flow_rate: float,
+                 minor_loss_k: float = 0.0, is_multiphase: bool = False,
+                 liquid_flow_rate: float = 0.0, gas_flow_rate: float = 0.0, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Pipe properties")
         self.setMinimumWidth(320)
@@ -49,6 +49,28 @@ class PipePropertiesDialog(QDialog):
             suffix=" m³/s",
         )
 
+        self.minor_k_spin = DialogUiFactory.create_double_spin(
+            decimals=6,
+            min_value=0.0,
+            max_value=1e6,
+            value=minor_loss_k,
+        )
+
+        self.fitting_preset = QComboBox()
+        self.fitting_preset.addItem("Custom (no preset)", None)
+        self.fitting_preset.addItem("Elbow 90° (standard)", 0.9)
+        self.fitting_preset.addItem("Elbow 90° (long radius)", 0.6)
+        self.fitting_preset.addItem("Elbow 45°", 0.4)
+        self.fitting_preset.addItem("Tee (through)", 0.6)
+        self.fitting_preset.addItem("Tee (branch)", 1.8)
+        self.fitting_preset.addItem("Gate valve (open)", 0.15)
+        self.fitting_preset.addItem("Globe valve (open)", 10.0)
+        self.fitting_preset.addItem("Ball valve (open)", 0.05)
+        self.fitting_preset.addItem("Butterfly valve (open)", 0.9)
+        self.fitting_preset.addItem("Sudden expansion", 1.0)
+        self.fitting_preset.addItem("Sudden contraction", 0.5)
+        self.fitting_preset.currentIndexChanged.connect(self._apply_fitting_preset)
+
         self.liquid_flow_spin = DialogUiFactory.create_double_spin(
             decimals=6,
             min_value=0.0,
@@ -69,6 +91,8 @@ class PipePropertiesDialog(QDialog):
         form.addRow("Length", self.length_spin)
         form.addRow("Diameter", self.diam_spin)
         form.addRow("Roughness", self.rough_spin)
+        form.addRow("Fitting Preset", self.fitting_preset)
+        form.addRow("Minor Loss K", self.minor_k_spin)
         
         if is_multiphase:
             form.addRow("Liquid Flow Rate", self.liquid_flow_spin)
@@ -82,16 +106,23 @@ class PipePropertiesDialog(QDialog):
         layout.addLayout(form)
         layout.addWidget(buttons)
 
-    def values(self) -> tuple[float, float, float, float, float, float]:
-        """Returns (length, diameter, roughness, flow_rate, liquid_flow_rate, gas_flow_rate)"""
+    def values(self) -> tuple[float, float, float, float, float, float, float]:
+        """Returns (length, diameter, roughness, flow_rate, minor_loss_k, liquid_flow_rate, gas_flow_rate)"""
         return (
             float(self.length_spin.value()),
             float(self.diam_spin.value()),
             float(self.rough_spin.value()),
             float(self.flow_spin.value()) if not self.is_multiphase else 0.0,
+            float(self.minor_k_spin.value()),
             float(self.liquid_flow_spin.value()) if self.is_multiphase else 0.0,
             float(self.gas_flow_spin.value()) if self.is_multiphase else 0.0,
         )
+
+    def _apply_fitting_preset(self) -> None:
+        preset_value = self.fitting_preset.currentData()
+        if preset_value is None:
+            return
+        self.minor_k_spin.setValue(float(preset_value))
 
 
 class NodePropertiesDialog(QDialog):
@@ -263,6 +294,7 @@ class FluidPropertiesDialog(QDialog):
 
         self.density_spin = single_section.density_spin
         self.viscosity_spin = single_section.viscosity_spin
+        self.temperature_spin = single_section.temperature_spin
         self.liquid_density_spin = multi_section.liquid_density_spin
         self.gas_density_spin = multi_section.gas_density_spin
         self.liquid_viscosity_spin = multi_section.liquid_viscosity_spin
@@ -288,6 +320,10 @@ class FluidPropertiesDialog(QDialog):
         return Fluid(
             density=self.density_spin.value(),
             viscosity=self.viscosity_spin.value(),
+            temperature_c=self.temperature_spin.value(),
+            reference_temperature_c=self.temperature_spin.value(),
+            reference_density=self.density_spin.value(),
+            reference_viscosity=self.viscosity_spin.value(),
             is_multiphase=self.multiphase_cb.isChecked(),
             liquid_density=self.liquid_density_spin.value(),
             gas_density=self.gas_density_spin.value(),

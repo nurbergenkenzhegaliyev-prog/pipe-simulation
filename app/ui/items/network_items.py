@@ -142,6 +142,7 @@ class PipeItem(QGraphicsLineItem):
         self.flow_rate = 0.05  # m3/s
         self.pump_curve = None
         self.valve = None
+        self.minor_loss_k = 0.0
 
         # Label in the canvas
         self.label = QGraphicsTextItem()
@@ -179,7 +180,8 @@ class PipeItem(QGraphicsLineItem):
             f"L = {self.length:.3f} m\n"
             f"D = {self.diameter:.4f} m\n"
             f"eps = {self.roughness:.4f}\n"
-            f"Q = {self.flow_rate:.4f} m3/s"
+            f"Q = {self.flow_rate:.4f} m3/s\n"
+            f"K_minor = {self.minor_loss_k:.4f}"
         )
         extras = []
         if getattr(self, "pump_curve", None) is not None:

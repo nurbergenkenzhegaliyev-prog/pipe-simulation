@@ -17,6 +17,7 @@ class Pipe:
     pressure_drop: float | None = None  # Pa
     pump_curve: PumpCurve | None = None
     valve: Valve | None = None
+    minor_loss_k: float = 0.0           # dimensionless (fittings, bends)
 
     def area(self) -> float:
         return math.pi * (self.diameter / 2) ** 2

@@ -63,23 +63,35 @@ class SinglePhasePressureDrop:
         if pipe.flow_rate is None:
             raise ValueError(f"Pipe {pipe.id} has no flow rate")
 
-        rho = fluid.density
+        rho = fluid.effective_density()
         q = pipe.flow_rate
         area = pipe.area()
 
+        if area <= 0:
+            pipe.pressure_drop = 0.0
+            return 0.0
+
         v = q / area
         logger.info(f"v: {v}")
+
+        if abs(v) < 1e-9:
+            pipe.pressure_drop = 0.0
+            return 0.0
 
         f = self.flow.friction_factor(
             velocity=v,
             diameter=pipe.diameter,
             roughness=pipe.roughness,
             rho=rho,
-            mu=fluid.viscosity,
+            mu=fluid.effective_viscosity(),
         )
         logger.debug(f"friction: {f}")
 
         dp = f * (pipe.length / pipe.diameter) * (rho * v**2 / 2)
+
+        minor_k = getattr(pipe, "minor_loss_k", 0.0)
+        if minor_k:
+            dp += minor_k * (rho * v**2 / 2)
 
         if pipe.valve is not None:
             dp += pipe.valve.pressure_drop(rho, v)
@@ -123,6 +135,10 @@ class MultiPhasePressureDrop:
         f = self.flow.friction_factor(vm, d, eps, rho_m, mu_m)
 
         dp_friction = f * (l / d) * (rho_m * vm**2 / 2)
+
+        minor_k = getattr(pipe, "minor_loss_k", 0.0)
+        if minor_k:
+            dp_friction += minor_k * (rho_m * vm**2 / 2)
 
         if pipe.valve is not None:
             dp_friction += pipe.valve.pressure_drop(rho_m, vm)

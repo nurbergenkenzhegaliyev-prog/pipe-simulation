@@ -51,16 +51,18 @@ def edit_pipe_properties(pipe: "PipeItem") -> None:
         pipe.diameter,
         pipe.roughness,
         pipe.flow_rate,
+        getattr(pipe, "minor_loss_k", 0.0),
         is_multiphase,
         liquid_flow,
         gas_flow,
     )
     if dlg.exec():
-        length, diameter, roughness, flow_rate, liquid_flow_rate, gas_flow_rate = dlg.values()
+        length, diameter, roughness, flow_rate, minor_loss_k, liquid_flow_rate, gas_flow_rate = dlg.values()
         pipe.length = length
         pipe.diameter = diameter
         pipe.roughness = roughness
         pipe.flow_rate = flow_rate
+        pipe.minor_loss_k = minor_loss_k
         pipe.liquid_flow_rate = liquid_flow_rate
         pipe.gas_flow_rate = gas_flow_rate
         pipe._update_tooltip()

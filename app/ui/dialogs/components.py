@@ -39,6 +39,7 @@ class FluidSinglePhaseSection:
     group: QGroupBox
     density_spin: QDoubleSpinBox
     viscosity_spin: QDoubleSpinBox
+    temperature_spin: QDoubleSpinBox
 
     @classmethod
     def from_fluid(cls, fluid) -> "FluidSinglePhaseSection":
@@ -60,10 +61,25 @@ class FluidSinglePhaseSection:
             suffix=" Pa·s",
         )
 
+        temp_value = fluid.temperature_c if fluid.temperature_c is not None else fluid.reference_temperature_c
+        temperature_spin = DialogUiFactory.create_double_spin(
+            decimals=2,
+            min_value=-50.0,
+            max_value=300.0,
+            value=temp_value,
+            suffix=" °C",
+        )
+
         form.addRow("Density", density_spin)
         form.addRow("Viscosity", viscosity_spin)
+        form.addRow("Temperature", temperature_spin)
         group.setLayout(form)
-        return cls(group=group, density_spin=density_spin, viscosity_spin=viscosity_spin)
+        return cls(
+            group=group,
+            density_spin=density_spin,
+            viscosity_spin=viscosity_spin,
+            temperature_spin=temperature_spin,
+        )
 
 
 @dataclass
