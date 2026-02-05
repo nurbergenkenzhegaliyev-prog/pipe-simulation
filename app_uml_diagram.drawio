@@ -1,0 +1,175 @@
+<mxfile host="65bd71144e">
+    <diagram id="uml_pipe_app" name="UML Architecture">
+        <mxGraphModel dx="998" dy="877" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" background="#ffffff" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="model_label" value="Data Models Layer" style="text;html=1;fontSize=14;fontStyle=bold;align=left;verticalAlign=top;" parent="1" vertex="1">
+                    <mxGeometry x="20" y="10" width="150" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="node_class" value="Node&#xa;&#xa;id: str&#xa;pressure: float | None&#xa;flow_rate: float | None&#xa;elevation: float&#xa;is_source: bool&#xa;is_sink: bool&#xa;is_pump: bool&#xa;is_valve: bool&#xa;pressure_ratio: float | None&#xa;valve_k: float | None" style="verticalAlign=top;align=left;overflow=fill;fontSize=11;fontFamily=Courier New;html=1;rounded=0;shadow=0;comic=0;labelBackgroundColor=none;strokeWidth=2;strokeColor=#000000;" parent="1" vertex="1">
+                    <mxGeometry x="20" y="40" width="180" height="180" as="geometry"/>
+                </mxCell>
+                <mxCell id="pipe_class" value="Pipe&#xa;&#xa;id: str&#xa;start_node: str&#xa;end_node: str&#xa;length: float&#xa;diameter: float&#xa;roughness: float&#xa;flow_rate: float | None&#xa;liquid_flow_rate: float | None&#xa;gas_flow_rate: float | None&#xa;pressure_drop: float | None&#xa;pump_curve: PumpCurve&#xa;valve: Valve&#xa;&#xa;+ area(): float" style="verticalAlign=top;align=left;overflow=fill;fontSize=11;fontFamily=Courier New;html=1;rounded=0;shadow=0;comic=0;labelBackgroundColor=none;strokeWidth=2;strokeColor=#000000;" parent="1" vertex="1">
+                    <mxGeometry x="240" y="40" width="200" height="220" as="geometry"/>
+                </mxCell>
+                <mxCell id="pump_class" value="PumpCurve&#xa;&#xa;a: float&#xa;b: float&#xa;c: float&#xa;&#xa;+ pressure_gain(flow_rate: float): float" style="verticalAlign=top;align=left;overflow=fill;fontSize=11;fontFamily=Courier New;html=1;rounded=0;shadow=0;comic=0;labelBackgroundColor=none;strokeWidth=2;strokeColor=#000000;" parent="1" vertex="1">
+                    <mxGeometry x="500" y="40" width="180" height="130" as="geometry"/>
+                </mxCell>
+                <mxCell id="valve_class" value="Valve&#xa;&#xa;k: float&#xa;&#xa;+ pressure_drop(rho: float, velocity: float): float" style="verticalAlign=top;align=left;overflow=fill;fontSize=11;fontFamily=Courier New;html=1;rounded=0;shadow=0;comic=0;labelBackgroundColor=none;strokeWidth=2;strokeColor=#000000;" parent="1" vertex="1">
+                    <mxGeometry x="740" y="40" width="200" height="110" as="geometry"/>
+                </mxCell>
+                <mxCell id="fluid_class" value="Fluid&#xa;&#xa;density: float&#xa;viscosity: float&#xa;is_multiphase: bool&#xa;liquid_density: float&#xa;gas_density: float&#xa;liquid_viscosity: float&#xa;gas_viscosity: float&#xa;surface_tension: float" style="verticalAlign=top;align=left;overflow=fill;fontSize=11;fontFamily=Courier New;html=1;rounded=0;shadow=0;comic=0;labelBackgroundColor=none;strokeWidth=2;strokeColor=#000000;" parent="1" vertex="1">
+                    <mxGeometry x="1000" y="40" width="180" height="180" as="geometry"/>
+                </mxCell>
+                <mxCell id="network_label" value="Network Layer" style="text;html=1;fontSize=14;fontStyle=bold;align=left;verticalAlign=top;" parent="1" vertex="1">
+                    <mxGeometry x="20" y="260" width="150" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="network_class" value="PipeNetwork&#xa;&#xa;nodes: dict[str, Node]&#xa;pipes: dict[str, Pipe]&#xa;&#xa;+ add_node(node: Node)&#xa;+ add_pipe(pipe: Pipe)&#xa;+ get_outgoing_pipes(node_id: str)&#xa;+ get_incoming_pipes(node_id: str)" style="verticalAlign=top;align=left;overflow=fill;fontSize=11;fontFamily=Courier New;html=1;rounded=0;shadow=0;comic=0;labelBackgroundColor=none;strokeWidth=2;strokeColor=#000000;" parent="1" vertex="1">
+                    <mxGeometry x="130" y="290" width="240" height="150" as="geometry"/>
+                </mxCell>
+                <mxCell id="service_label" value="Service Layer - Pressure Drop" style="text;html=1;fontSize=14;fontStyle=bold;align=left;verticalAlign=top;" parent="1" vertex="1">
+                    <mxGeometry x="20" y="480" width="200" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="pd_service_class" value="PressureDropService&#xa;&#xa;- fluid: Fluid&#xa;- flow: FlowProperties&#xa;- single_phase: SinglePhasePressureDrop&#xa;- multi_phase: MultiPhasePressureDrop&#xa;- node_gain: NodePressureGain&#xa;&#xa;+ calculate_pipe_dp(pipe: Pipe)&#xa;+ calculate_multiphase_dp(pipe: Pipe)&#xa;+ valve_loss(k: float, pipe: Pipe)&#xa;+ calculate_node_pressure_gain(...)" style="verticalAlign=top;align=left;overflow=fill;fontSize=11;fontFamily=Courier New;html=1;rounded=0;shadow=0;comic=0;labelBackgroundColor=none;strokeWidth=2;strokeColor=#000000;" parent="1" vertex="1">
+                    <mxGeometry x="20" y="510" width="280" height="170" as="geometry"/>
+                </mxCell>
+                <mxCell id="sppd_class" value="SinglePhasePressureDrop&#xa;&#xa;- flow: FlowProperties&#xa;&#xa;+ calculate(pipe: Pipe, fluid: Fluid): float" style="verticalAlign=top;align=left;overflow=fill;fontSize=11;fontFamily=Courier New;html=1;rounded=0;shadow=0;comic=0;labelBackgroundColor=none;strokeWidth=2;strokeColor=#000000;" parent="1" vertex="1">
+                    <mxGeometry x="370" y="510" width="200" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="mppd_class" value="MultiPhasePressureDrop&#xa;&#xa;- flow: FlowProperties&#xa;&#xa;+ calculate(pipe: Pipe, fluid: Fluid): float" style="verticalAlign=top;align=left;overflow=fill;fontSize=11;fontFamily=Courier New;html=1;rounded=0;shadow=0;comic=0;labelBackgroundColor=none;strokeWidth=2;strokeColor=#000000;" parent="1" vertex="1">
+                    <mxGeometry x="650" y="510" width="200" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="npg_class" value="NodePressureGain&#xa;&#xa;+ calculate(node, inlet_pressure: float): float" style="verticalAlign=top;align=left;overflow=fill;fontSize=11;fontFamily=Courier New;html=1;rounded=0;shadow=0;comic=0;labelBackgroundColor=none;strokeWidth=2;strokeColor=#000000;" parent="1" vertex="1">
+                    <mxGeometry x="930" y="510" width="200" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="solver_label" value="Service Layer - Solver" style="text;html=1;fontSize=14;fontStyle=bold;align=left;verticalAlign=top;" parent="1" vertex="1">
+                    <mxGeometry x="20" y="720" width="200" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="cf_class" value="CycleFinder&#xa;&#xa;+ find_cycles(network: PipeNetwork): list" style="verticalAlign=top;align=left;overflow=fill;fontSize=11;fontFamily=Courier New;html=1;rounded=0;shadow=0;comic=0;labelBackgroundColor=none;strokeWidth=2;strokeColor=#000000;" parent="1" vertex="1">
+                    <mxGeometry x="820" y="940" width="180" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="hc_class" value="HardyCrossSolver&#xa;&#xa;- dp_service: PressureDropService&#xa;&#xa;+ apply(network, cycles: list)" style="verticalAlign=top;align=left;overflow=fill;fontSize=11;fontFamily=Courier New;html=1;rounded=0;shadow=0;comic=0;labelBackgroundColor=none;strokeWidth=2;strokeColor=#000000;" parent="1" vertex="1">
+                    <mxGeometry x="250" y="750" width="200" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="pp_class" value="PressurePropagation&#xa;&#xa;- dp_service: PressureDropService&#xa;&#xa;+ propagate(network: PipeNetwork)" style="verticalAlign=top;align=left;overflow=fill;fontSize=11;fontFamily=Courier New;html=1;rounded=0;shadow=0;comic=0;labelBackgroundColor=none;strokeWidth=2;strokeColor=#000000;" parent="1" vertex="1">
+                    <mxGeometry x="520" y="750" width="200" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="nps_class" value="NetworkPressureSolver&#xa;&#xa;- dp_service: PressureDropService&#xa;- cycle_finder: CycleFinder&#xa;- hardy_cross: HardyCrossSolver&#xa;- propagator: PressurePropagation&#xa;&#xa;+ solve(network: PipeNetwork)" style="verticalAlign=top;align=left;overflow=fill;fontSize=11;fontFamily=Courier New;html=1;rounded=0;shadow=0;comic=0;labelBackgroundColor=none;strokeWidth=2;strokeColor=#000000;" parent="1" vertex="1">
+                    <mxGeometry x="790" y="750" width="240" height="130" as="geometry"/>
+                </mxCell>
+                <mxCell id="controller_label" value="Controller Layer" style="text;html=1;fontSize=14;fontStyle=bold;align=left;verticalAlign=top;" parent="1" vertex="1">
+                    <mxGeometry x="1240" y="480" width="150" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="controller_class" value="MainController&#xa;&#xa;- scene: Scene&#xa;- fluid: Fluid&#xa;&#xa;+ set_fluid(fluid: Fluid)&#xa;+ build_network_from_scene(): PipeNetwork&#xa;+ run_network_simulation(): PipeNetwork" style="verticalAlign=top;align=left;overflow=fill;fontSize=11;fontFamily=Courier New;html=1;rounded=0;shadow=0;comic=0;labelBackgroundColor=none;strokeWidth=2;strokeColor=#000000;" parent="1" vertex="1">
+                    <mxGeometry x="1200" y="510" width="230" height="140" as="geometry"/>
+                </mxCell>
+                <mxCell id="pipe_pump_edge" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="pipe_class" target="pump_class" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="pipe_valve_edge" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="pipe_class" target="valve_class" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="700" y="190"/>
+                            <mxPoint x="700" y="95"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="network_node_edge" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="network_class" target="node_class" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="200" y="255"/>
+                            <mxPoint x="110" y="255"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="network_pipe_edge" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="network_class" target="pipe_class" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="pd_fluid_edge" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="pd_service_class" target="fluid_class" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1150" y="650"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="pd_sppd_edge" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="pd_service_class" target="sppd_class" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="pd_mppd_edge" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="pd_service_class" target="mppd_class" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="610" y="620"/>
+                            <mxPoint x="610" y="560"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="pd_npg_edge" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="pd_service_class" target="npg_class" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="890" y="640"/>
+                            <mxPoint x="890" y="550"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="nps_pd_edge" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="nps_class" target="pd_service_class" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="910" y="700"/>
+                            <mxPoint x="160" y="700"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="nps_cf_edge" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="nps_class" target="cf_class" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="910" y="890"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="nps_hc_edge" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="nps_class" target="hc_class" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="480" y="870"/>
+                            <mxPoint x="480" y="800"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="nps_pp_edge" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="nps_class" target="pp_class" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="controller_network_edge" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;" parent="1" source="controller_class" target="network_class" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1215" y="490"/>
+                            <mxPoint x="250" y="490"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="controller_fluid_edge" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="controller_class" target="fluid_class" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1170" y="580"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="controller_nps_edge" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;" parent="1" source="controller_class" target="nps_class" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1130" y="815"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;" edge="1" parent="1" source="controller_class" target="network_class">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="1215" y="510" as="sourcePoint"/>
+                        <mxPoint x="250" y="440" as="targetPoint"/>
+                        <Array as="points">
+                            <mxPoint x="1215" y="360"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

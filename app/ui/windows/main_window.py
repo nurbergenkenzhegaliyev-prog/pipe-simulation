@@ -41,6 +41,7 @@ class MainWindow(QMainWindow):
         self.top_tabs.open_clicked.connect(self._open_json)
         self.top_tabs.save_as_clicked.connect(self._save_as_json)
         self.top_tabs.import_clicked.connect(self._open_json)
+        self.top_tabs.import_epanet_clicked.connect(self._import_epanet)
         self.top_tabs.fluid_settings_clicked.connect(self._show_fluid_settings)
 
         self.results_view = ResultsView()
@@ -137,6 +138,81 @@ class MainWindow(QMainWindow):
 
     def _load_from_json(self, data):
         self._serializer.load(self.scene, data)
+    
+    def _import_epanet(self):
+        """Import network from EPANET INP file"""
+        path, _ = QFileDialog.getOpenFileName(
+            self, "Import EPANET File", "", "EPANET Files (*.inp);;All Files (*)"
+        )
+        if not path:
+            return
+        
+        try:
+            from app.services.epanet_parser import EPANETParser
+            
+            parser = EPANETParser()
+            network = parser.parse_file(path)
+            
+            # Clear existing scene
+            self.scene.clear_all()
+            
+            # Create nodes in scene
+            import random
+            node_positions = {}
+            for i, (node_id, node) in enumerate(network.nodes.items()):
+                # Simple grid layout for positioning
+                x = (i % 10) * 150 - 500
+                y = (i // 10) * 150 - 500
+                pos = QPointF(x, y)
+                node_positions[node_id] = pos
+                
+                # Add to scene based on type
+                if node.is_source:
+                    self.scene._node_ops.add_source(pos, node_id)
+                    source_item = self.scene.nodes[-1]
+                    if node.pressure is not None:
+                        source_item.pressure = node.pressure
+                elif node.is_sink:
+                    self.scene._node_ops.add_sink(pos, node_id)
+                    sink_item = self.scene.nodes[-1]
+                    if node.flow_rate is not None:
+                        sink_item.flow_rate = node.flow_rate
+                else:
+                    self.scene._node_ops.add_node(pos, node_id)
+            
+            # Create pipes in scene
+            for pipe_id, pipe in network.pipes.items():
+                # Find nodes in scene
+                node1 = next((n for n in self.scene.nodes if n.node_id == pipe.start_node), None)
+                node2 = next((n for n in self.scene.nodes if n.node_id == pipe.end_node), None)
+                
+                if node1 and node2:
+                    self.scene._pipe_ops.add_pipe(node1, node2, pipe_id)
+                    pipe_item = self.scene.pipes[-1]
+                    pipe_item.length = pipe.length
+                    pipe_item.diameter = pipe.diameter
+                    pipe_item.roughness = pipe.roughness
+                    pipe_item.flow_rate = pipe.flow_rate or 0.01
+            
+            # Update fluid settings to water
+            from app.services.epanet_parser import EPANETParser
+            self.current_fluid = EPANETParser.get_default_fluid()
+            self.controller.set_fluid(self.current_fluid)
+            self.scene.current_fluid = self.current_fluid
+            
+            self.statusBar().showMessage(
+                f"Imported EPANET file: {len(network.nodes)} nodes, {len(network.pipes)} pipes",
+                5000
+            )
+            
+        except ImportError:
+            QMessageBox.critical(
+                self,
+                "Import Failed",
+                "EPANET parser module not found."
+            )
+        except Exception as exc:
+            QMessageBox.critical(self, "Import failed", str(exc))
 
     def _on_tool_changed(self, tool):
         self.scene.set_tool(tool)
@@ -148,7 +224,7 @@ class MainWindow(QMainWindow):
         try:
             network = self.controller.run_network_simulation()
             self.scene.apply_results(network)
-            self.results_view.update_results(network)
+            self.results_view.update_results(network, fluid=self.current_fluid, scene=self.scene)
             
             # Apply color overlays
             NetworkVisualizer.apply_pressure_overlay(self.scene, network)

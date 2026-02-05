@@ -1,3 +1,15 @@
+"""Network scene for visual pipe network modeling.
+
+This module provides the main QGraphicsScene for the network editor,
+handling user interactions, tool management, and network manipulation.
+
+The scene supports:
+- Multiple drawing tools (nodes, pipes, pumps, valves)
+- Undo/redo command history
+- Real-time network validation
+- Result visualization after simulation
+"""
+
 from PyQt6.QtWidgets import QGraphicsScene
 from PyQt6.QtCore import Qt, pyqtSignal, QPointF
 
@@ -14,10 +26,36 @@ from app.ui.validation.validation_visualizer import ValidationVisualizer
 
 
 class NetworkScene(QGraphicsScene):
+    """Graphics scene for building and visualizing pipe networks.
+    
+    Provides a visual canvas for creating and editing pipe networks with
+    interactive tools. Supports undo/redo, validation, and result display.
+    
+    Signals:
+        nodes_changed: Emitted when nodes or pipes are added/removed/modified
+        validation_changed: Emitted with list of validation issues
+        
+    Attributes:
+        current_tool: Active drawing tool (SELECT, NODE, PIPE, etc.)
+        nodes: List of all NodeItem objects in the scene
+        pipes: List of all PipeItem objects in the scene
+        command_manager: Manages undo/redo command history
+        validator: Real-time network validation
+        current_fluid: Current fluid properties for simulation
+        
+    Example:
+        >>> scene = NetworkScene()
+        >>> scene.set_tool(Tool.NODE)
+        >>> # Click on canvas to add nodes
+        >>> scene.set_tool(Tool.PIPE)
+        >>> # Click nodes to connect with pipes
+    """
+    
     nodes_changed = pyqtSignal()
     validation_changed = pyqtSignal(object)  # Emits validation issues list
 
     def __init__(self):
+        """Initialize the network scene with empty network."""
         super().__init__()
         self.setSceneRect(-2000, -2000, 4000, 4000)
 
@@ -46,6 +84,14 @@ class NetworkScene(QGraphicsScene):
 
     # ---------- API FROM UI ----------
     def set_tool(self, tool: Tool):
+        """Set the active drawing tool.
+        
+        Args:
+            tool: Tool to activate (SELECT, NODE, PIPE, PUMP, VALVE)
+            
+        Note:
+            Resets pipe drawing state when switching tools.
+        """
         self.current_tool = tool
         self._pipe_start_node = None
         self._pipe_ops.reset_pipe_builder()
@@ -236,4 +282,16 @@ class NetworkScene(QGraphicsScene):
 
     def apply_results(self, network):
         self._result_applier.apply_results(network)
+        
+        # Show flow direction arrows on pipes
+        for pipe_item in self.pipes:
+            # Get the flow rate from the network
+            network_pipe = network.pipes.get(pipe_item.pipe_id)
+            if network_pipe and network_pipe.flow_rate is not None:
+                pipe_item.show_flow_direction(network_pipe.flow_rate)
+    
+    def clear_flow_arrows(self):
+        """Remove all flow direction arrows from pipes"""
+        for pipe_item in self.pipes:
+            pipe_item.hide_flow_direction()
 

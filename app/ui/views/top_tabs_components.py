@@ -79,6 +79,7 @@ class HomeTabActions:
     open_action: QAction
     save_action: QAction
     import_action: QAction
+    import_epanet_action: QAction
     run_action: QAction
     results_action: QAction
     fluid_action: QAction
@@ -109,6 +110,9 @@ class HomeTabBuilder:
         import_action = file_toolbar.addAction(
             self._owner.style().standardIcon(QStyle.StandardPixmap.SP_FileDialogDetailedView), "Import JSON"
         )
+        import_epanet_action = file_toolbar.addAction(
+            self._owner.style().standardIcon(QStyle.StandardPixmap.SP_FileDialogContentsView), "Import EPANET"
+        )
 
         run_group, run_toolbar = self._groups.create_group("Run")
         run_action = run_toolbar.addAction(
@@ -134,6 +138,7 @@ class HomeTabBuilder:
 
         return home_tab, HomeTabActions(
             new_action=new_action,
+            import_epanet_action=import_epanet_action,
             open_action=open_action,
             save_action=save_action,
             import_action=import_action,

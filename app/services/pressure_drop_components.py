@@ -3,33 +3,56 @@ from __future__ import annotations
 import logging
 import math
 from dataclasses import dataclass
+from typing import Optional
 
 from app.map.pipe import Pipe
 from app.models.fluid import Fluid
+from app.services.friction_correlations import FrictionFactorCalculator, FrictionCorrelation
 
 logger = logging.getLogger(__name__)
 
 
 @dataclass
 class FlowProperties:
+    """Flow properties calculator with configurable friction correlation.
+    
+    Attributes:
+        friction_calculator: Calculator for friction factor (optional)
+    """
+    friction_calculator: Optional[FrictionFactorCalculator] = None
+    
+    def __post_init__(self):
+        """Initialize with default friction calculator if none provided."""
+        if self.friction_calculator is None:
+            # Default to Colebrook-White for backward compatibility
+            self.friction_calculator = FrictionFactorCalculator(
+                FrictionCorrelation.COLEBROOK_WHITE
+            )
+    
     def reynolds_number(self, velocity: float, diameter: float, rho: float, mu: float) -> float:
         return rho * velocity * diameter / mu
 
     def friction_factor(self, velocity: float, diameter: float, roughness: float, rho: float, mu: float) -> float:
+        """Calculate friction factor using configured correlation method.
+        
+        Args:
+            velocity: Flow velocity (m/s)
+            diameter: Pipe diameter (m)
+            roughness: Pipe roughness (m)
+            rho: Fluid density (kg/m³)
+            mu: Fluid dynamic viscosity (Pa·s)
+            
+        Returns:
+            Darcy-Weisbach friction factor
+        """
         re = self.reynolds_number(velocity, diameter, rho, mu)
         logger.debug(f"Re: {re}")
 
-        if re < 2300:
-            return 64.0 / re
-
-        eps = roughness
-        d = diameter
-
-        return 0.25 / (
-            math.log10(
-                (eps / (3.7 * d)) + (5.74 / (re ** 0.9))
-            ) ** 2
-        )
+        # Calculate relative roughness
+        relative_roughness = roughness / diameter
+        
+        # Use friction calculator
+        return self.friction_calculator.calculate(re, relative_roughness)
 
 
 @dataclass

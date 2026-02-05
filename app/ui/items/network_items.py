@@ -3,9 +3,11 @@ from PyQt6.QtWidgets import (
     QGraphicsLineItem,
     QMenu,
     QGraphicsTextItem,
+    QGraphicsPolygonItem,
 )
-from PyQt6.QtGui import QPen, QBrush, QFont
+from PyQt6.QtGui import QPen, QBrush, QFont, QPolygonF
 from PyQt6.QtCore import Qt, QPointF
+import math
 from app.ui.items.item_editors import (
     edit_node_properties,
     edit_pipe_properties,
@@ -148,6 +150,10 @@ class PipeItem(QGraphicsLineItem):
         self.label.setZValue(10)  # ensure above line
         self.label.setPlainText(self.pipe_id)
         self.scene_label_added = False
+        
+        # Flow direction arrows
+        self.flow_arrows = []  # List of arrow graphics items
+        self.flow_direction = 0  # 1 = node1->node2, -1 = node2->node1, 0 = unknown
 
         self.node1 = node1
         self.node2 = node2
@@ -219,6 +225,102 @@ class PipeItem(QGraphicsLineItem):
         else:
             mp = dp_pa / 1e6
             self.label.setPlainText(f"{self.pipe_id}\ndP={mp:.3f} MPa")
+    
+    def show_flow_direction(self, flow_rate: float = None):
+        """Display flow direction arrows on the pipe
+        
+        Args:
+            flow_rate: Flow rate in m³/s. If None, uses self.flow_rate
+        """
+        # Remove existing arrows
+        self.hide_flow_direction()
+        
+        if flow_rate is None:
+            flow_rate = self.flow_rate or 0.0
+        
+        # Determine direction (0 means no flow or unknown)
+        if abs(flow_rate) < 1e-9:
+            self.flow_direction = 0
+            return
+        
+        # Positive flow: node1 -> node2, Negative flow: node2 -> node1
+        self.flow_direction = 1 if flow_rate >= 0 else -1
+        
+        # Create arrow along the pipe
+        line = self.line()
+        start_x, start_y = line.x1(), line.y1()
+        end_x, end_y = line.x2(), line.y2()
+        
+        # Reverse if negative flow
+        if self.flow_direction < 0:
+            start_x, start_y, end_x, end_y = end_x, end_y, start_x, start_y
+        
+        # Calculate pipe angle
+        dx = end_x - start_x
+        dy = end_y - start_y
+        length = math.sqrt(dx**2 + dy**2)
+        
+        if length < 1e-6:
+            return
+        
+        # Normalize direction
+        dx /= length
+        dy /= length
+        
+        # Create multiple arrows along the pipe (2-3 arrows)
+        num_arrows = min(3, max(1, int(length / 100)))
+        
+        for i in range(num_arrows):
+            # Position arrows evenly along pipe (but not at endpoints)
+            t = (i + 1) / (num_arrows + 1)
+            arrow_x = start_x + t * (end_x - start_x)
+            arrow_y = start_y + t * (end_y - start_y)
+            
+            # Create arrowhead
+            arrow = self._create_arrowhead(arrow_x, arrow_y, dx, dy)
+            
+            if self.scene():
+                self.scene().addItem(arrow)
+                self.flow_arrows.append(arrow)
+    
+    def _create_arrowhead(self, x: float, y: float, dx: float, dy: float):
+        """Create an arrowhead polygon pointing in direction (dx, dy)"""
+        arrow_size = 12
+        arrow_width = 8
+        
+        # Calculate perpendicular vector
+        perp_x = -dy
+        perp_y = dx
+        
+        # Arrow points
+        tip = QPointF(x + dx * arrow_size, y + dy * arrow_size)
+        left = QPointF(
+            x - dx * arrow_size/2 + perp_x * arrow_width/2,
+            y - dy * arrow_size/2 + perp_y * arrow_width/2
+        )
+        right = QPointF(
+            x - dx * arrow_size/2 - perp_x * arrow_width/2,
+            y - dy * arrow_size/2 - perp_y * arrow_width/2
+        )
+        
+        # Create polygon
+        polygon = QPolygonF([tip, left, right])
+        arrow_item = QGraphicsPolygonItem(polygon)
+        
+        # Style the arrow
+        arrow_item.setBrush(QBrush(Qt.GlobalColor.darkRed))
+        arrow_item.setPen(QPen(Qt.GlobalColor.darkRed, 1))
+        arrow_item.setZValue(5)  # Above pipe, below label
+        
+        return arrow_item
+    
+    def hide_flow_direction(self):
+        """Remove flow direction arrows"""
+        for arrow in self.flow_arrows:
+            if arrow.scene():
+                arrow.scene().removeItem(arrow)
+        self.flow_arrows.clear()
+        self.flow_direction = 0
 
 
 class PumpItem(NodeItem):

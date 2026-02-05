@@ -11,6 +11,7 @@ class TopTabsWidget(QTabWidget):
     open_clicked = pyqtSignal()
     save_as_clicked = pyqtSignal()
     import_clicked = pyqtSignal()
+    import_epanet_clicked = pyqtSignal()
     new_clicked = pyqtSignal()
     fluid_settings_clicked = pyqtSignal()
 
@@ -42,6 +43,7 @@ class TopTabsWidget(QTabWidget):
         home_actions.open_action.triggered.connect(self.open_clicked)
         home_actions.save_action.triggered.connect(self.save_as_clicked)
         home_actions.import_action.triggered.connect(self.import_clicked)
+        home_actions.import_epanet_action.triggered.connect(self.import_epanet_clicked)
         home_actions.run_action.triggered.connect(self.run_clicked)
         home_actions.results_action.triggered.connect(self.results_clicked)
         home_actions.fluid_action.triggered.connect(self.fluid_settings_clicked)
