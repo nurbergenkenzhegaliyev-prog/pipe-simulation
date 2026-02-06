@@ -1,11 +1,11 @@
 from PyQt6.QtWidgets import QWidget, QPushButton, QVBoxLayout, QHBoxLayout, QFileDialog, QMessageBox
 
 from app.ui.views.results_view_components import ResultsTableBuilder, ResultsUpdater, ResultsViewLayout
-from app.services.pressure_drop_service import PressureDropService
+from app.services.pressure import PressureDropService
 from app.services.pipe_point_analyzer import PipePointAnalyzer
-from app.services.results_exporter import ResultsExporter
-from app.services.pdf_report_generator import PDFReportGenerator
-from app.services.cad_exporter import DXFExporter
+from app.services.exporters.results_exporter import ResultsExporter
+from app.services.exporters.pdf_report_generator import PDFReportGenerator
+from app.services.exporters.cad_exporter import DXFExporter
 
 
 class ResultsView(QWidget):

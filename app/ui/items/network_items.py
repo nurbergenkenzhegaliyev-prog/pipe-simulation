@@ -207,6 +207,9 @@ class PipeItem(QGraphicsLineItem):
         self.setLine(p1.x(), p1.y(), p2.x(), p2.y())
         if hasattr(self, "label"):
             self.update_label_position()
+        # Update flow arrows if they exist
+        if self.flow_arrows:
+            self.show_flow_direction()
 
     def attach_label_to_scene(self):
         # call once after item is added to scene

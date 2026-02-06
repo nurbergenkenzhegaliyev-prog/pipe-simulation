@@ -17,7 +17,7 @@ from typing import Callable, Optional
 from app.map.network import PipeNetwork
 from app.map.node import Node
 from app.map.pipe import Pipe
-from app.services.pressure_drop_service import PressureDropService
+from app.services.pressure import PressureDropService
 
 
 @dataclass
@@ -172,8 +172,8 @@ class TransientSolver:
             self._apply_events(network, time, events)
             
             # Solve steady-state for this time snapshot
-            from app.services.network_pressure_solver import NetworkPressureSolver
-            solver = NetworkPressureSolver(self.dp_service)
+            from app.services.solvers import NetworkSolver
+            solver = NetworkSolver(self.dp_service)
             solver.solve(network)
             
             # Collect results

@@ -6,8 +6,8 @@ from app.map.network import PipeNetwork
 from app.map.node import Node
 from app.map.pipe import Pipe
 from app.models.fluid import Fluid
-from app.services.pressure_drop_service import PressureDropService
-from app.services.network_pressure_solver import NetworkPressureSolver
+from app.services.pressure import PressureDropService
+from app.services.solvers import NetworkSolver
 
 
 class TestPerformanceBenchmarks:
@@ -95,7 +95,7 @@ class TestPerformanceBenchmarks:
         network, fluid = self._create_grid_network(4, 4)
         
         dp_service = PressureDropService(fluid)
-        solver = NetworkPressureSolver(dp_service)
+        solver = NetworkSolver(dp_service)
         
         start = time.time()
         solver.solve(network)
@@ -284,7 +284,7 @@ class TestPerformanceBenchmarks:
     def _run_simulation(self, network: PipeNetwork, fluid: Fluid):
         """Run the pressure solver on a network"""
         dp_service = PressureDropService(fluid)
-        solver = NetworkPressureSolver(dp_service)
+        solver = NetworkSolver(dp_service)
         solver.solve(network)
         
         # Verify results

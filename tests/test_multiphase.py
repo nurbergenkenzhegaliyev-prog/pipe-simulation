@@ -2,7 +2,7 @@ import pytest
 import logging
 from app.map.pipe import Pipe
 from app.models.fluid import Fluid
-from app.services.pressure_drop_service import PressureDropService
+from app.services.pressure import PressureDropService
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(message)s', force=True)

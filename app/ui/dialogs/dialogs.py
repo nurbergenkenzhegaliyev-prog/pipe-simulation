@@ -7,6 +7,7 @@ from app.ui.dialogs.components import (
     FluidMultiPhaseSection,
     FluidSinglePhaseSection,
 )
+from app.services.solvers import SolverMethod
 
 
 class PipePropertiesDialog(QDialog):
@@ -332,3 +333,50 @@ class FluidPropertiesDialog(QDialog):
             surface_tension=self.surface_tension_spin.value()
         )
 
+
+class SimulationSettingsDialog(QDialog):
+    """Dialog for configuring simulation settings like solver method."""
+    
+    def __init__(self, current_method: SolverMethod = SolverMethod.NEWTON_RAPHSON, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Simulation Settings")
+        self.setMinimumWidth(400)
+        
+        # Solver method selection
+        self.solver_combo = QComboBox()
+        self.solver_combo.addItem("Newton-Raphson (Default, Faster)", SolverMethod.NEWTON_RAPHSON)
+        self.solver_combo.addItem("Hardy-Cross (Traditional)", SolverMethod.HARDY_CROSS)
+        
+        # Set current method
+        for i in range(self.solver_combo.count()):
+            if self.solver_combo.itemData(i) == current_method:
+                self.solver_combo.setCurrentIndex(i)
+                break
+        
+        # Description labels
+        description_label = QLabel(
+            "<b>Solver Method:</b><br/>"
+            "<b>Newton-Raphson:</b> Modern method with faster convergence for complex networks. "
+            "Recommended for most applications.<br/><br/>"
+            "<b>Hardy-Cross:</b> Traditional method, well-tested and reliable. "
+            "May require more iterations for large networks."
+        )
+        description_label.setWordWrap(True)
+        description_label.setStyleSheet("QLabel { padding: 10px; background: #f0f0f0; border-radius: 4px; }")
+        
+        # Layout
+        layout = QVBoxLayout(self)
+        layout.addWidget(QLabel("<h3>Calculation Method</h3>"))
+        layout.addWidget(description_label)
+        layout.addSpacing(10)
+        
+        form = QFormLayout()
+        form.addRow("Solver Method:", self.solver_combo)
+        layout.addLayout(form)
+        
+        layout.addStretch(1)
+        layout.addWidget(DialogUiFactory.create_button_box(self))
+    
+    def get_solver_method(self) -> SolverMethod:
+        """Get the selected solver method."""
+        return self.solver_combo.currentData()

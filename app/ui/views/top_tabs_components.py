@@ -83,6 +83,7 @@ class HomeTabActions:
     run_action: QAction
     results_action: QAction
     fluid_action: QAction
+    simulation_settings_action: QAction
 
 
 class HomeTabBuilder:
@@ -126,6 +127,9 @@ class HomeTabBuilder:
         fluid_action = settings_toolbar.addAction(
             self._owner.style().standardIcon(QStyle.StandardPixmap.SP_FileDialogInfoView), "Fluid"
         )
+        simulation_settings_action = settings_toolbar.addAction(
+            self._owner.style().standardIcon(QStyle.StandardPixmap.SP_FileDialogDetailedView), "Simulation Settings"
+        )
 
         self._groups.mark_inactive_action(file_toolbar, new_action)
 
@@ -145,6 +149,7 @@ class HomeTabBuilder:
             run_action=run_action,
             results_action=results_action,
             fluid_action=fluid_action,
+            simulation_settings_action=simulation_settings_action,
         )
 
 

@@ -13,9 +13,10 @@ from app.controllers.main_controller import MainController
 from app.ui.views import TopTabsWidget, LeftPanelWidget, WorkspaceWidget, ResultsView
 from app.ui.dialogs import FluidPropertiesDialog
 from app.ui.windows.main_window_components import ResultsDialogManager, SceneSerializer, SceneValidator
-from app.services.pressure_drop_service import PressureDropService
+from app.services.pressure import PressureDropService
 from app.services.pipe_point_analyzer import PipePointAnalyzer
 from app.ui.visualization.network_visualizer import NetworkVisualizer
+from app.services.solvers import SolverMethod
 
 
 class MainWindow(QMainWindow):
@@ -27,6 +28,9 @@ class MainWindow(QMainWindow):
 
         # Initialize default fluid (single-phase water) BEFORE creating layout
         self.current_fluid = Fluid()
+        
+        # Initialize default solver method (Newton-Raphson)
+        self.solver_method = SolverMethod.NEWTON_RAPHSON
         
         self.top_tabs = TopTabsWidget(self)
         self.setMenuWidget(self.top_tabs)
@@ -43,6 +47,7 @@ class MainWindow(QMainWindow):
         self.top_tabs.import_clicked.connect(self._open_json)
         self.top_tabs.import_epanet_clicked.connect(self._import_epanet)
         self.top_tabs.fluid_settings_clicked.connect(self._show_fluid_settings)
+        self.top_tabs.simulation_settings_clicked.connect(self._show_simulation_settings)
 
         self.results_view = ResultsView()
         self._results_manager = ResultsDialogManager(self, self.results_view)
@@ -104,6 +109,21 @@ class MainWindow(QMainWindow):
             pressure_service = PressureDropService(self.current_fluid)
             self._pipe_analyzer = PipePointAnalyzer(pressure_service)
             self.results_view.set_pipe_analyzer(self._pipe_analyzer)
+    
+    def _show_simulation_settings(self):
+        """Show the simulation settings dialog"""
+        from app.ui.dialogs import SimulationSettingsDialog
+        
+        dialog = SimulationSettingsDialog(self.solver_method, self)
+        if dialog.exec() == QDialog.DialogCode.Accepted:
+            self.solver_method = dialog.get_solver_method()
+            
+            # Update status bar
+            method_name = "Newton-Raphson" if self.solver_method == SolverMethod.NEWTON_RAPHSON else "Hardy-Cross"
+            self.statusBar().showMessage(f"Solver method changed to: {method_name}", 3000)
+            
+            # Update controller with new solver method
+            self.controller.set_solver_method(self.solver_method)
 
     def _serialize_scene(self):
         return self._serializer.serialize(self.scene)
@@ -148,7 +168,7 @@ class MainWindow(QMainWindow):
             return
         
         try:
-            from app.services.epanet_parser import EPANETParser
+            from app.services.parsers.epanet_parser import EPANETParser
             
             parser = EPANETParser()
             network = parser.parse_file(path)
@@ -195,7 +215,7 @@ class MainWindow(QMainWindow):
                     pipe_item.flow_rate = pipe.flow_rate or 0.01
             
             # Update fluid settings to water
-            from app.services.epanet_parser import EPANETParser
+            from app.services.parsers.epanet_parser import EPANETParser
             self.current_fluid = EPANETParser.get_default_fluid()
             self.controller.set_fluid(self.current_fluid)
             self.scene.current_fluid = self.current_fluid

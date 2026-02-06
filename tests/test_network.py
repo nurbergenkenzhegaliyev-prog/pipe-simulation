@@ -3,8 +3,8 @@ from app.map.network import PipeNetwork
 from app.map.node import Node
 from app.map.pipe import Pipe
 from app.models.fluid import Fluid
-from app.services.pressure_drop_service import PressureDropService
-from app.services.network_pressure_solver import NetworkPressureSolver
+from app.services.pressure import PressureDropService
+from app.services.solvers import NetworkSolver
 
 # Configure logging
 # Configure logging to always print to console, even with pytest
@@ -41,7 +41,7 @@ def test_pressure_drop_propagation():
 
     fluid = Fluid()
     dp_service = PressureDropService(fluid)
-    solver = NetworkPressureSolver(dp_service)
+    solver = NetworkSolver(dp_service)
 
     solver.solve(network)
 

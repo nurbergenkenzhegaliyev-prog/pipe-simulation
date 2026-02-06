@@ -2,7 +2,7 @@ import math
 
 from app.map.pipe import Pipe
 from app.models.fluid import Fluid
-from app.services.pressure_drop_service import PressureDropService
+from app.services.pressure import PressureDropService
 
 
 def test_minor_loss_increases_pressure_drop():

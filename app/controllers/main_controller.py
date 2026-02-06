@@ -2,8 +2,8 @@ from app.map.network import PipeNetwork
 from app.map.node import Node
 from app.map.pipe import Pipe
 from app.models.fluid import Fluid
-from app.services.pressure_drop_service import PressureDropService
-from app.services.network_pressure_solver import NetworkPressureSolver
+from app.services.pressure import PressureDropService
+from app.services.solvers import NetworkSolver, SolverMethod
 
 
 class MainController:
@@ -12,10 +12,15 @@ class MainController:
 
         # temporary defaults; later from UI dialogs
         self.fluid = Fluid()
+        self.solver_method = SolverMethod.NEWTON_RAPHSON  # Default to Newton-Raphson
 
     def set_fluid(self, fluid: Fluid):
         """Update the fluid properties used for simulations"""
         self.fluid = fluid
+    
+    def set_solver_method(self, method: SolverMethod):
+        """Update the solver method used for simulations"""
+        self.solver_method = method
 
     def build_network_from_scene(self) -> PipeNetwork:
         network = PipeNetwork()
@@ -59,7 +64,7 @@ class MainController:
         network = self.build_network_from_scene()
 
         dp_service = PressureDropService(self.fluid)
-        solver = NetworkPressureSolver(dp_service)
+        solver = NetworkSolver(dp_service, method=self.solver_method)
         solver.solve(network)
 
         return network  # now contains results (pressures & dp)

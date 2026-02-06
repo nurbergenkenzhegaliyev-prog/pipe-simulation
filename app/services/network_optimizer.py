@@ -19,8 +19,8 @@ import numpy as np
 from scipy.optimize import minimize, LinearConstraint, Bounds
 
 from app.map.network import PipeNetwork
-from app.services.pressure_drop_service import PressureDropService
-from app.services.network_pressure_solver import NetworkPressureSolver
+from app.services.pressure import PressureDropService
+from app.services.solvers import NetworkSolver
 
 
 class ObjectiveType(Enum):
