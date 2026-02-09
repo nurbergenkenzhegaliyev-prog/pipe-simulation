@@ -229,7 +229,7 @@ Comprehensive documentation overhaul with user manual, API docs, and Sphinx setu
 
 ### Files Modified/Created
 - `README.md` - Complete rewrite with comprehensive user guide
-- `docs/README_SPHINX.md` - Sphinx documentation setup guide
+- `docs/api/sphinx-setup.md` - Sphinx documentation setup guide
 - `app/services/network_pressure_solver.py` - Added detailed docstrings
 - `app/services/pressure_drop_service.py` - Added detailed docstrings
 - `app/ui/scenes/network_scene.py` - Added detailed docstrings
@@ -275,7 +275,8 @@ docs/
 │   └── modules/          # Auto-generated module docs
 ├── build/
 │   └── html/             # Generated HTML documentation
-└── README_SPHINX.md      # Setup guide
+└── api/
+   └── sphinx-setup.md   # Setup guide
 ```
 
 **Features:**

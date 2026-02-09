@@ -214,4 +214,3 @@ Results View (UI Display)
 - **Separation of Concerns**: UI, models, services, and solving are isolated
 - **Graph Processing**: Network represented as adjacency dict for efficiency
 - **Component-based Architecture**: Pressure drop calculations modularized
-

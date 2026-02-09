@@ -161,7 +161,7 @@ All features have been tested:
 
 ## Next Steps
 
-The development roadmap has been updated in [development_suggestions.txt](development_suggestions.txt).
+The development roadmap has been updated in [docs/roadmap/development-roadmap.md](../roadmap/development-roadmap.md).
 
 **New priorities:**
 1. GUI Integration Tests

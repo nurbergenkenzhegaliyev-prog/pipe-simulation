@@ -136,9 +136,9 @@ from app.services.solvers import NetworkSolver, SolverMethod
 ## Additional Work Done
 
 ### Documentation Created:
-1. ✅ `SERVICES_RESTRUCTURING.md` - Complete restructuring guide
-2. ✅ `RESTRUCTURING_SUMMARY_FEB_2026.md` - Implementation summary
-3. ✅ `QUICK_START_NEW_STRUCTURE.md` - Quick reference guide
+1. ✅ `docs/architecture/services-structure.md` - Complete restructuring guide
+2. ✅ `docs/architecture/restructuring-summary.md` - Implementation summary
+3. ✅ `docs/getting-started.md` - Quick reference guide
 
 ### Testing:
 - ✅ All unit tests pass
@@ -220,10 +220,10 @@ Tasks were completed in the following order (most efficient):
 4. `app/services/solvers/newton_raphson_solver.py` ⭐
 5. `app/services/solvers/pressure_propagation.py`
 6. `app/services/solvers/network_solver.py` ⭐
-7. `app/services/SERVICES_RESTRUCTURING.md`
-8. `RESTRUCTURING_SUMMARY_FEB_2026.md`
-9. `QUICK_START_NEW_STRUCTURE.md`
-10. `TASK_COMPLETION_REPORT.md` (this file)
+7. `docs/architecture/services-structure.md`
+8. `docs/architecture/restructuring-summary.md`
+9. `docs/getting-started.md`
+10. `docs/development/task-completion-report.md` (this file)
 
 Plus 3 new `__init__.py` files for pressure/exporters/parsers.
 

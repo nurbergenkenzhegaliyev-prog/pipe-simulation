@@ -1,7 +1,7 @@
 ================================================================================
 PIPE NETWORK SIMULATION APPLICATION - FULL DESCRIPTION
 ================================================================================
-Date: February 6, 2026
+Date: February 9, 2026
 
 ================================================================================
 1. APPLICATION OVERVIEW
@@ -38,9 +38,10 @@ Layered Architecture:
 ┌────────────▼────────────────────────┐
 │    Service Layer                    │
 │  - PressureDropService              │
-│  - NetworkPressureSolver            │
+│  - NetworkSolver (Newton-Raphson + Hardy-Cross) │
 │  - PressurePropagation              │
-│  - PDF/CSV Export                   │
+│  - PDF/CSV/DXF Export               │
+│  - EPANET Import/Export             │
 └────────────┬────────────────────────┘
              │
 ┌────────────▼────────────────────────┐
@@ -544,11 +545,12 @@ Pressure at inlet:
    - Dynamic phase interaction
 
 ✅ 3. NETWORK SOLVER
-   - Hardy-Cross method for looped networks
-   - Pressure propagation for tree structures
-   - Automatic cycle detection (BFS)
-   - Flow conservation at nodes
-   - Tested up to 200+ nodes
+  - Newton-Raphson solver (default, faster convergence)
+  - Hardy-Cross method for looped networks
+  - Pressure propagation for tree structures
+  - Automatic cycle detection (BFS)
+  - Solver method selection in UI (Simulation Settings)
+  - Tested up to 200+ nodes
 
 ✅ 4. REAL-TIME VALIDATION
    - Network connectivity checks
@@ -579,6 +581,11 @@ Pressure at inlet:
       - Flow distribution histogram
       - Velocity distribution histogram
       - Professional formatting with logos
+
+  c) CAD/DXF Export
+    - AutoCAD-compatible DXF output
+    - Layers for nodes, pipes, and equipment
+    - Optional labels for IDs and results
 
 ✅ 7. EPANET IMPORT/EXPORT
    - Reads standard .inp format files
@@ -797,10 +804,11 @@ Python version: 3.10 or higher
 COMPLETED:
   ✅ Core simulation engine
   ✅ GUI with visualization
-  ✅ Results export (CSV, PDF)
+  ✅ Results export (CSV, PDF, DXF)
   ✅ Equipment models (Pump, Valve, Tank, Reservoir)
   ✅ Multi-phase support
-  ✅ Network solver (Hardy-Cross + Pressure Propagation)
+  ✅ Network solver (Newton-Raphson + Hardy-Cross + Pressure Propagation)
+  ✅ Solver method selection (Simulation Settings)
   ✅ Real-time validation
   ✅ Color-coded visualization
   ✅ Flow direction arrows
@@ -921,6 +929,7 @@ Creating a simple network:
 Exporting results:
   - Click "Export CSV" for spreadsheet data
   - Click "Export PDF Report" for professional report
+  - Click "Export DXF" for CAD output
   - Click "Export EPANET" for INP format
 
 Running tests:
@@ -931,7 +940,7 @@ Running tests:
 ================================================================================
 END OF DOCUMENT
 ================================================================================
-Created: February 6, 2026
+Created: February 9, 2026
 Application Status: Production-Ready (83% Complete)
 This document provides complete description of functionality and formulas.
 ================================================================================

@@ -2,6 +2,8 @@
 
 A professional PyQt6-based hydraulic network modeling and simulation application with advanced features for engineering analysis.
 
+Documentation: See [docs/INDEX.md](docs/INDEX.md) for the complete documentation index.
+
 ## 🌟 Features
 
 ### Core Simulation Capabilities
@@ -237,7 +239,7 @@ For issues, questions, or feature requests, please open an issue on GitHub or co
 
 ## 🎯 Roadmap
 
-See [development_suggestions.txt](development_suggestions.txt) for detailed roadmap.
+See [docs/roadmap/development-roadmap.md](docs/roadmap/development-roadmap.md) for detailed roadmap.
 
 ### Upcoming Features
 - GUI integration test automation
@@ -249,10 +251,10 @@ See [development_suggestions.txt](development_suggestions.txt) for detailed road
 
 ## 📚 Additional Resources
 
-- [UML Architecture Diagram](UML_ARCHITECTURE.md)
-- [Implementation Summary](IMPLEMENTATION_SUMMARY.md)
-- [Multi-Phase Flow Guide](docs/multiphase_ui_guide.md)
-- [Validation Documentation](VALIDATION_FIXES.md)
+- [UML Architecture Diagram](docs/architecture/uml-architecture.md)
+- [Implementation Summary](docs/development/implementation-summary.md)
+- [Multi-Phase Flow Guide](docs/guides/multiphase-ui-guide.md)
+- [Validation Documentation](docs/development/validation-fixes.md)
 
 ---
 

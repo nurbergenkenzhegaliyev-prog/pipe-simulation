@@ -189,7 +189,7 @@ from app.services.solvers import NetworkSolver, SolverMethod
 7. `app/services/pressure/__init__.py`
 8. `app/services/exporters/__init__.py`
 9. `app/services/parsers/__init__.py`
-10. `app/services/SERVICES_RESTRUCTURING.md` ⭐ Documentation
+10. `docs/architecture/services-structure.md` Documentation
 
 ### Files Moved
 
@@ -241,7 +241,7 @@ Pipe P2: dP = 796,684.12 Pa
 
 ## Documentation Updates
 
-1. **SERVICES_RESTRUCTURING.md** - Complete guide to new structure
+1. **services-structure.md** - Complete guide to new structure
 2. **Inline docstrings** - All new classes fully documented
 3. **Type hints** - Full type annotations throughout
 4. **Usage examples** - In docstrings and README

@@ -112,7 +112,8 @@ docs/
 │       └── controllers.rst
 ├── build/
 │   └── html/             # Generated HTML documentation
-└── README_SPHINX.md      # This file
+└── api/
+    └── sphinx-setup.md   # This file
 ```
 
 ## Writing Docstrings

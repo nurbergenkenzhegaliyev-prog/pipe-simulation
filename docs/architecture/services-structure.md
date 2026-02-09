@@ -237,7 +237,7 @@ Planned additions to the new structure:
 
 ## Questions?
 
-See the main [README.md](../../README.md) or [APPLICATION_FULL_DESCRIPTION.txt](../../APPLICATION_FULL_DESCRIPTION.txt) for full documentation.
+See the main [README.md](../../README.md) or [Application Description](../application-full-description.txt) for full documentation.
 
 ---
 
