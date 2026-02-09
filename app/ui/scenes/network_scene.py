@@ -53,6 +53,7 @@ class NetworkScene(QGraphicsScene):
     
     nodes_changed = pyqtSignal()
     validation_changed = pyqtSignal(object)  # Emits validation issues list
+    tool_changed = pyqtSignal(object)  # Emits Tool when the current tool changes
 
     def __init__(self):
         """Initialize the network scene with empty network."""
@@ -96,10 +97,14 @@ class NetworkScene(QGraphicsScene):
         self._pipe_start_node = None
         self._pipe_ops.reset_pipe_builder()
         self.clearSelection()
+        self.tool_changed.emit(tool)
 
     def keyPressEvent(self, event):
         if event.key() in (Qt.Key.Key_Delete, Qt.Key.Key_Backspace):
             self._delete_selected()
+            return
+        elif event.key() == Qt.Key.Key_Escape:
+            self.set_tool(Tool.SELECT)
             return
         super().keyPressEvent(event)
     

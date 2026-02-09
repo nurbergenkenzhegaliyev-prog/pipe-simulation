@@ -288,5 +288,75 @@ class TestResultsView:
         assert main_window.results_view._fluid is not None
 
 
-if __name__ == "__main__":
-    pytest.main([__file__, "-v", "-s"])
+class TestEscapeKeyFunctionality:
+    """Test Escape key functionality for tool switching"""
+    
+    def test_escape_key_switches_to_select_tool(self, main_window):
+        """Test that pressing Escape key switches to SELECT tool"""
+        from PyQt6.QtGui import QKeyEvent
+        
+        # Start with SOURCE tool
+        main_window.scene.set_tool(Tool.SOURCE)
+        assert main_window.scene.current_tool == Tool.SOURCE
+        
+        # Create and send Escape key press event
+        escape_event = QKeyEvent(QKeyEvent.Type.KeyPress, Qt.Key.Key_Escape, Qt.KeyboardModifier.NoModifier)
+        main_window.scene.keyPressEvent(escape_event)
+        
+        # Check that tool changed to SELECT
+        assert main_window.scene.current_tool == Tool.SELECT
+    
+    def test_escape_key_from_pipe_tool(self, main_window):
+        """Test Escape key switches from PIPE tool to SELECT"""
+        from PyQt6.QtGui import QKeyEvent
+        
+        main_window.scene.set_tool(Tool.PIPE)
+        assert main_window.scene.current_tool == Tool.PIPE
+        
+        escape_event = QKeyEvent(QKeyEvent.Type.KeyPress, Qt.Key.Key_Escape, Qt.KeyboardModifier.NoModifier)
+        main_window.scene.keyPressEvent(escape_event)
+        
+        assert main_window.scene.current_tool == Tool.SELECT
+    
+    def test_escape_key_resets_pipe_drawing_state(self, main_window):
+        """Test that Escape key also resets pipe drawing state"""
+        from PyQt6.QtGui import QKeyEvent
+        from PyQt6.QtCore import QPointF
+        
+        # Create a source node for pipe starting
+        main_window.scene._node_ops.add_source(QPointF(0, 0), "Source1")
+        source_node = main_window.scene.nodes[-1]
+        
+        # Set PIPE tool and simulate starting a pipe
+        main_window.scene.set_tool(Tool.PIPE)
+        main_window.scene._pipe_start_node = source_node
+        assert main_window.scene._pipe_start_node is not None
+        
+        # Send Escape key
+        escape_event = QKeyEvent(QKeyEvent.Type.KeyPress, Qt.Key.Key_Escape, Qt.KeyboardModifier.NoModifier)
+        main_window.scene.keyPressEvent(escape_event)
+        
+        # Check that pipe state is reset and tool switched
+        assert main_window.scene._pipe_start_node is None
+        assert main_window.scene.current_tool == Tool.SELECT
+    
+    def test_tool_changed_signal_emitted_on_escape(self, main_window):
+        """Test that tool_changed signal is emitted when Escape is pressed"""
+        from PyQt6.QtGui import QKeyEvent
+        
+        signal_emitted = []
+        main_window.scene.tool_changed.connect(lambda tool: signal_emitted.append(tool))
+        
+        # Start with NODE tool
+        main_window.scene.set_tool(Tool.NODE)
+        signal_emitted.clear()  # Clear the signal from set_tool
+        
+        # Send Escape key
+        escape_event = QKeyEvent(QKeyEvent.Type.KeyPress, Qt.Key.Key_Escape, Qt.KeyboardModifier.NoModifier)
+        main_window.scene.keyPressEvent(escape_event)
+        
+        # Check that signal was emitted with SELECT tool
+        assert len(signal_emitted) > 0
+        assert signal_emitted[-1] == Tool.SELECT
+
+

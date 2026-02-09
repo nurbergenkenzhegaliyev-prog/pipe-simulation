@@ -30,7 +30,7 @@ class TopTabsWidget(QTabWidget):
 
         groups = ToolbarGroupFactory(self)
         home_tab, home_actions = HomeTabBuilder(self, groups).build()
-        insert_tab = InsertTabBuilder(self, groups).build()
+        insert_tab, self._tool_group = InsertTabBuilder(self, groups).build()
 
         self.addTab(home_tab, "Home")
         self.addTab(insert_tab, "Insert")

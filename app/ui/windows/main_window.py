@@ -83,6 +83,7 @@ class MainWindow(QMainWindow):
         self.controller = MainController(self.scene)
         self.scene.nodes_changed.connect(lambda: self.left_panel.refresh_from_scene(self.scene))
         self.scene.validation_changed.connect(self._on_validation_changed)
+        self.scene.tool_changed.connect(self._on_scene_tool_changed)
         self.left_panel.refresh_from_scene(self.scene)
         
         # Link fluid settings to scene so items can access it
@@ -236,6 +237,15 @@ class MainWindow(QMainWindow):
 
     def _on_tool_changed(self, tool):
         self.scene.set_tool(tool)
+        self.statusBar().showMessage(f"Tool: {tool.name}")
+
+    def _on_scene_tool_changed(self, tool):
+        """Handle tool changes from the scene (e.g., when Escape key is pressed)"""
+        # Update the tool palette UI to reflect the new tool
+        for action in self.top_tabs._tool_group.actions():
+            if action.property("tool") == tool:
+                action.setChecked(True)
+                break
         self.statusBar().showMessage(f"Tool: {tool.name}")
 
     def _on_run_clicked(self):

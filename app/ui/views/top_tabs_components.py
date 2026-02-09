@@ -60,6 +60,7 @@ class ToolbarGroupFactory:
         action = toolbar.addAction(self._owner.style().standardIcon(icon), text)
         action.setCheckable(True)
         action.setChecked(checked)
+        action.setProperty("tool", tool)
         group.addAction(action)
         action.triggered.connect(lambda _checked, t=tool: self._owner.tool_changed.emit(t))
         return action
@@ -158,7 +159,7 @@ class InsertTabBuilder:
         self._owner = owner
         self._groups = groups
 
-    def build(self) -> QWidget:
+    def build(self) -> tuple[QWidget, QActionGroup]:
         insert_tab = QWidget()
         insert_tab.setObjectName("RibbonPage")
         insert_layout = QHBoxLayout(insert_tab)
@@ -210,4 +211,4 @@ class InsertTabBuilder:
         insert_layout.addWidget(other_group)
         insert_layout.addStretch(1)
 
-        return insert_tab
+        return insert_tab, tool_group
