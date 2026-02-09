@@ -48,6 +48,7 @@ class MainWindow(QMainWindow):
         self.top_tabs.import_epanet_clicked.connect(self._import_epanet)
         self.top_tabs.fluid_settings_clicked.connect(self._show_fluid_settings)
         self.top_tabs.simulation_settings_clicked.connect(self._show_simulation_settings)
+        self.top_tabs.transient_simulation_clicked.connect(self._show_transient_simulation)
 
         self.results_view = ResultsView()
         self._results_manager = ResultsDialogManager(self, self.results_view)
@@ -125,6 +126,54 @@ class MainWindow(QMainWindow):
             
             # Update controller with new solver method
             self.controller.set_solver_method(self.solver_method)
+    
+    def _show_transient_simulation(self):
+        """Show the transient simulation dialog and run transient analysis"""
+        from app.ui.dialogs import TransientSimulationDialog
+        from app.ui.visualization.transient_plotter import TransientPlotWidget
+        from PyQt6.QtWidgets import QDialog, QVBoxLayout
+        
+        # Get available pipes and nodes from scene
+        pipe_ids = [pipe.pipe_id for pipe in self.scene.pipes]
+        node_ids = [node.node_id for node in self.scene.nodes]
+        
+        # Show transient configuration dialog
+        dialog = TransientSimulationDialog(available_pipes=pipe_ids, available_nodes=node_ids, parent=self)
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+        
+        # Get configuration
+        config = dialog.get_configuration()
+        
+        # Update controller with current fluid
+        self.controller.set_fluid(self.current_fluid)
+        
+        # Run transient simulation
+        self.statusBar().showMessage("Running transient simulation...", 0)
+        try:
+            results = self.controller.run_transient_simulation(config)
+            self.statusBar().showMessage(
+                f"Transient simulation complete: {len(results)} time steps", 3000
+            )
+            
+            # Show results in plot widget
+            results_dialog = QDialog(self)
+            results_dialog.setWindowTitle("Transient Analysis Results")
+            results_dialog.resize(1200, 700)
+            
+            layout = QVBoxLayout(results_dialog)
+            layout.setContentsMargins(0, 0, 0, 0)
+            
+            plot_widget = TransientPlotWidget()
+            plot_widget.set_results(results)
+            layout.addWidget(plot_widget)
+            
+            results_dialog.exec()
+            
+        except Exception as e:
+            self.statusBar().showMessage(f"Transient simulation failed: {str(e)}", 5000)
+            QMessageBox.critical(self, "Simulation Error", 
+                               f"Transient simulation failed:\n{str(e)}")
 
     def _serialize_scene(self):
         return self._serializer.serialize(self.scene)

@@ -15,6 +15,7 @@ class TopTabsWidget(QTabWidget):
     new_clicked = pyqtSignal()
     fluid_settings_clicked = pyqtSignal()
     simulation_settings_clicked = pyqtSignal()
+    transient_simulation_clicked = pyqtSignal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -49,3 +50,4 @@ class TopTabsWidget(QTabWidget):
         home_actions.results_action.triggered.connect(self.results_clicked)
         home_actions.fluid_action.triggered.connect(self.fluid_settings_clicked)
         home_actions.simulation_settings_action.triggered.connect(self.simulation_settings_clicked)
+        home_actions.transient_action.triggered.connect(self.transient_simulation_clicked)

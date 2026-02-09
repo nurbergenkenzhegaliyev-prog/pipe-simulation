@@ -85,6 +85,7 @@ class HomeTabActions:
     results_action: QAction
     fluid_action: QAction
     simulation_settings_action: QAction
+    transient_action: QAction
 
 
 class HomeTabBuilder:
@@ -123,6 +124,9 @@ class HomeTabBuilder:
         results_action = run_toolbar.addAction(
             self._owner.style().standardIcon(QStyle.StandardPixmap.SP_FileDialogContentsView), "Results"
         )
+        transient_action = run_toolbar.addAction(
+            self._owner.style().standardIcon(QStyle.StandardPixmap.SP_BrowserReload), "Transient"
+        )
 
         settings_group, settings_toolbar = self._groups.create_group("Settings")
         fluid_action = settings_toolbar.addAction(
@@ -151,6 +155,7 @@ class HomeTabBuilder:
             results_action=results_action,
             fluid_action=fluid_action,
             simulation_settings_action=simulation_settings_action,
+            transient_action=transient_action,
         )
 
 

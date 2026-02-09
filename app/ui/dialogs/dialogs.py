@@ -1,6 +1,9 @@
 from PyQt6.QtWidgets import (
-    QDialog, QFormLayout, QCheckBox, QVBoxLayout, QLabel, QComboBox
+    QDialog, QFormLayout, QCheckBox, QVBoxLayout, QLabel, QComboBox,
+    QTableWidget, QTableWidgetItem, QPushButton, QHBoxLayout, QGroupBox,
+    QSpinBox, QHeaderView
 )
+from PyQt6.QtCore import Qt
 
 from app.ui.dialogs.components import (
     DialogUiFactory,
@@ -380,3 +383,162 @@ class SimulationSettingsDialog(QDialog):
     def get_solver_method(self) -> SolverMethod:
         """Get the selected solver method."""
         return self.solver_combo.currentData()
+
+
+class TransientSimulationDialog(QDialog):
+    """Dialog for configuring transient simulation parameters and events."""
+    
+    def __init__(self, available_pipes: list = None, available_nodes: list = None, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Transient Simulation Settings")
+        self.setMinimumWidth(700)
+        self.setMinimumHeight(500)
+        
+        self.available_pipes = available_pipes or []
+        self.available_nodes = available_nodes or []
+        self.events_data = []
+        
+        # Create UI
+        layout = QVBoxLayout(self)
+        
+        # Title
+        layout.addWidget(QLabel("<h2>Transient Analysis Configuration</h2>"))
+        
+        # Simulation parameters group
+        params_group = QGroupBox("Simulation Parameters")
+        params_layout = QFormLayout()
+        
+        self.total_time_spin = DialogUiFactory.create_double_spin(
+            decimals=2, min_value=0.1, max_value=3600.0, value=10.0, suffix=" s"
+        )
+        self.time_step_spin = DialogUiFactory.create_double_spin(
+            decimals=4, min_value=0.0001, max_value=1.0, value=0.01, suffix=" s"
+        )
+        self.wave_speed_spin = DialogUiFactory.create_double_spin(
+            decimals=0, min_value=100.0, max_value=2000.0, value=1000.0, suffix=" m/s"
+        )
+        
+        params_layout.addRow("Total Time:", self.total_time_spin)
+        params_layout.addRow("Time Step:", self.time_step_spin)
+        params_layout.addRow("Wave Speed:", self.wave_speed_spin)
+        params_group.setLayout(params_layout)
+        layout.addWidget(params_group)
+        
+        # Events group
+        events_group = QGroupBox("Transient Events")
+        events_layout = QVBoxLayout()
+        
+        # Events table
+        self.events_table = QTableWidget(0, 6)
+        self.events_table.setHorizontalHeaderLabels([
+            "Event Type", "Time (s)", "Duration (s)", "Target", "From", "To"
+        ])
+        self.events_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        self.events_table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
+        events_layout.addWidget(self.events_table)
+        
+        # Event buttons
+        event_buttons_layout = QHBoxLayout()
+        add_valve_btn = QPushButton("Add Valve Closure")
+        add_valve_btn.clicked.connect(lambda: self._add_event("valve_closure"))
+        add_pump_btn = QPushButton("Add Pump Trip")
+        add_pump_btn.clicked.connect(lambda: self._add_event("pump_trip"))
+        add_demand_btn = QPushButton("Add Demand Change")
+        add_demand_btn.clicked.connect(lambda: self._add_event("demand_change"))
+        remove_event_btn = QPushButton("Remove Selected")
+        remove_event_btn.clicked.connect(self._remove_selected_event)
+        
+        event_buttons_layout.addWidget(add_valve_btn)
+        event_buttons_layout.addWidget(add_pump_btn)
+        event_buttons_layout.addWidget(add_demand_btn)
+        event_buttons_layout.addWidget(remove_event_btn)
+        event_buttons_layout.addStretch()
+        events_layout.addLayout(event_buttons_layout)
+        
+        events_group.setLayout(events_layout)
+        layout.addWidget(events_group)
+        
+        # Dialog buttons
+        layout.addWidget(DialogUiFactory.create_button_box(self))
+    
+    def _add_event(self, event_type: str):
+        """Add a new transient event to the table."""
+        row = self.events_table.rowCount()
+        self.events_table.insertRow(row)
+        
+        # Event type
+        type_item = QTableWidgetItem(event_type.replace("_", " ").title())
+        type_item.setFlags(type_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
+        self.events_table.setItem(row, 0, type_item)
+        
+        # Time
+        self.events_table.setItem(row, 1, QTableWidgetItem("0.0"))
+        
+        # Duration
+        default_duration = "0.5" if event_type == "valve_closure" else "2.0"
+        self.events_table.setItem(row, 2, QTableWidgetItem(default_duration))
+        
+        # Target (pipe or node ID)
+        if event_type in ["valve_closure", "pump_trip"]:
+            target = self.available_pipes[0] if self.available_pipes else "pipe_1"
+        else:
+            target = self.available_nodes[0] if self.available_nodes else "node_1"
+        self.events_table.setItem(row, 3, QTableWidgetItem(target))
+        
+        # From value
+        from_value = "1.0" if event_type in ["valve_closure", "pump_trip"] else "0.0"
+        self.events_table.setItem(row, 4, QTableWidgetItem(from_value))
+        
+        # To value
+        to_value = "0.0" if event_type in ["valve_closure", "pump_trip"] else "0.001"
+        self.events_table.setItem(row, 5, QTableWidgetItem(to_value))
+        
+        # Store event data
+        self.events_data.append({
+            "type": event_type,
+            "time": 0.0,
+            "duration": float(default_duration),
+            "target": target,
+            "from_value": float(from_value),
+            "to_value": float(to_value),
+        })
+    
+    def _remove_selected_event(self):
+        """Remove the selected event from the table."""
+        selected_rows = set(item.row() for item in self.events_table.selectedItems())
+        for row in sorted(selected_rows, reverse=True):
+            self.events_table.removeRow(row)
+            if row < len(self.events_data):
+                self.events_data.pop(row)
+    
+    def get_configuration(self) -> dict:
+        """Get the transient simulation configuration.
+        
+        Returns:
+            Dict with simulation parameters and events
+        """
+        # Read events from table
+        events = []
+        for row in range(self.events_table.rowCount()):
+            event_type = self.events_table.item(row, 0).text().lower().replace(" ", "_")
+            time = float(self.events_table.item(row, 1).text() or 0.0)
+            duration = float(self.events_table.item(row, 2).text() or 1.0)
+            target = self.events_table.item(row, 3).text()
+            from_value = float(self.events_table.item(row, 4).text() or 0.0)
+            to_value = float(self.events_table.item(row, 5).text() or 0.0)
+            
+            events.append({
+                "type": event_type,
+                "time": time,
+                "duration": duration,
+                "target": target,
+                "from_value": from_value,
+                "to_value": to_value,
+            })
+        
+        return {
+            "total_time": self.total_time_spin.value(),
+            "time_step": self.time_step_spin.value(),
+            "wave_speed": self.wave_speed_spin.value(),
+            "events": events,
+        }

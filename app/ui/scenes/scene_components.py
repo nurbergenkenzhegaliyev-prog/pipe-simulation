@@ -305,7 +305,11 @@ class NetworkResultApplier:
 
         for node_id, node in network.nodes.items():
             if node_id in node_by_id:
-                node_by_id[node_id].update_label(getattr(node, "pressure", None))
+                node_item = node_by_id[node_id]
+                # Update node pressure attribute (important for pumps/valves)
+                node_item.pressure = getattr(node, "pressure", None)
+                node_item.update_label(node_item.pressure)
+                node_item._update_tooltip()
 
         dps = []
         for pipe_id, pipe in network.pipes.items():

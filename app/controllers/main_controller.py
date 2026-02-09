@@ -4,6 +4,7 @@ from app.map.pipe import Pipe
 from app.models.fluid import Fluid
 from app.services.pressure import PressureDropService
 from app.services.solvers import NetworkSolver, SolverMethod
+from app.services.transient_solver import TransientSolver, TransientEvent, WaterHammerParams
 
 
 class MainController:
@@ -68,3 +69,67 @@ class MainController:
         solver.solve(network)
 
         return network  # now contains results (pressures & dp)
+    
+    def run_transient_simulation(self, config: dict):
+        """Run a transient simulation with the specified configuration.
+        
+        Args:
+            config: Configuration dict from TransientSimulationDialog containing:
+                - total_time: Total simulation time (s)
+                - time_step: Time step size (s)
+                - wave_speed: Pressure wave speed (m/s)
+                - events: List of event dicts with type, time, duration, target, etc.
+        
+        Returns:
+            List of TransientResult objects
+        """
+        network = self.build_network_from_scene()
+        
+        # Create pressure drop service
+        dp_service = PressureDropService(self.fluid)
+        
+        # Configure water hammer parameters
+        water_hammer_params = WaterHammerParams(
+            wave_speed=config.get('wave_speed', 1000.0),
+        )
+        
+        # Create transient solver
+        transient_solver = TransientSolver(
+            dp_service=dp_service,
+            time_step=config.get('time_step', 0.01),
+            max_steps=int(config.get('total_time', 10.0) / config.get('time_step', 0.01)) + 100,
+            water_hammer_params=water_hammer_params,
+        )
+        
+        # Convert event dicts to TransientEvent objects
+        events = []
+        for event_dict in config.get('events', []):
+            event_type = event_dict['type']
+            
+            # Determine node_id or pipe_id based on event type
+            if event_type in ['valve_closure', 'valve_opening', 'pump_trip', 'pump_ramp']:
+                pipe_id = event_dict['target']
+                node_id = None
+            else:  # demand_change, pressure_change
+                node_id = event_dict['target']
+                pipe_id = None
+            
+            event = TransientEvent(
+                time=event_dict['time'],
+                event_type=event_type,
+                duration=event_dict['duration'],
+                start_value=event_dict['from_value'],
+                end_value=event_dict['to_value'],
+                node_id=node_id,
+                pipe_id=pipe_id,
+            )
+            events.append(event)
+        
+        # Run transient simulation
+        results = transient_solver.solve(
+            network=network,
+            total_time=config.get('total_time', 10.0),
+            events=events,
+        )
+        
+        return results

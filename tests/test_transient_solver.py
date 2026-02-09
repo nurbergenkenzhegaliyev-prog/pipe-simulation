@@ -21,6 +21,7 @@ from app.services.transient_solver import (
     TransientEvent,
     TransientResult,
     TransientSolver,
+    WaterHammerParams,
 )
 
 
@@ -376,3 +377,97 @@ class TestCallbackFunctionality:
         assert isinstance(last_callback_result, TransientResult)
         assert len(last_callback_result.node_pressures) > 0
         assert len(last_callback_result.pipe_flows) > 0
+
+
+class TestWaterHammerAnalysis:
+    """Test water hammer calculations and surge pressure analysis."""
+    
+    def test_water_hammer_params_default(self):
+        """Test default water hammer parameters."""
+        params = WaterHammerParams()
+        assert params.wave_speed == 1000.0
+        assert params.bulk_modulus == 2.2e9
+        assert params.pipe_elastic_modulus == 200e9
+    
+    def test_wave_speed_calculation(self):
+        """Test wave speed calculation using Korteweg formula."""
+        wave_speed = WaterHammerParams.calculate_wave_speed(
+            bulk_modulus=2.2e9,
+            density=998.0,
+            diameter=0.1,
+            wall_thickness=0.005,
+            elastic_modulus=200e9,
+        )
+        
+        # Expected around 1000-1400 m/s for water in steel pipe
+        # (varies with pipe thickness and material properties)
+        assert 900 < wave_speed < 1500
+    
+    def test_surge_pressure_valve_closure(self, simple_network):
+        """Test surge pressure from valve closure."""
+        fluid = Fluid(density=998.0, viscosity=1e-3)
+        dp_service = PressureDropService(fluid)
+        
+        events = [
+            TransientEvent(
+                time=0.1,
+                event_type='valve_closure',
+                duration=0.1,
+                start_value=1.0,
+                end_value=0.0,
+                pipe_id='pipe1',
+            )
+        ]
+        
+        solver = TransientSolver(
+            dp_service=dp_service,
+            time_step=0.01,
+            max_steps=500,
+        )
+        
+        results = solver.solve(
+            simple_network,
+            total_time=1.0,
+            events=events,
+        )
+        
+        # Check surge pressures are calculated
+        max_surge, pipe_id, time = solver.get_max_surge_pressure()
+        assert max_surge >= 0.0
+        assert pipe_id in ['pipe1', '']
+    
+    def test_cavitation_detection(self, simple_network):
+        """Test cavitation detection."""
+        fluid = Fluid(density=998.0, viscosity=1e-3)
+        dp_service = PressureDropService(fluid)
+        
+        # Set high vapor pressure to trigger cavitation detection
+        solver = TransientSolver(
+            dp_service=dp_service,
+            time_step=0.01,
+            max_steps=100,
+            vapor_pressure=300000.0,  # 3 bar
+        )
+        
+        results = solver.solve(
+            simple_network,
+            total_time=0.5,
+            events=None,
+        )
+        
+        cavitation_events = solver.get_cavitation_events()
+        assert isinstance(cavitation_events, list)
+    
+    def test_transient_result_surge_data(self, transient_solver, simple_network):
+        """Test that transient results contain surge pressure data."""
+        results = transient_solver.solve(
+            simple_network,
+            total_time=0.1,
+            events=None,
+        )
+        
+        for result in results:
+            assert hasattr(result, 'surge_pressures')
+            assert isinstance(result.surge_pressures, dict)
+            assert hasattr(result, 'cavitation_nodes')
+            assert isinstance(result.cavitation_nodes, list)

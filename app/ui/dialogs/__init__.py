@@ -5,6 +5,7 @@ from .dialogs import (
     PumpPropertiesDialog,
     ValvePropertiesDialog,
     SimulationSettingsDialog,
+    TransientSimulationDialog,
 )
 
 __all__ = [
@@ -14,4 +15,5 @@ __all__ = [
     "PumpPropertiesDialog",
     "ValvePropertiesDialog",
     "SimulationSettingsDialog",
+    "TransientSimulationDialog",
 ]

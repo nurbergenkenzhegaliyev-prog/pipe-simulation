@@ -66,9 +66,16 @@ class PressurePropagation:
                 next_node = network.nodes[pipe.end_node]
 
                 if next_node.pressure is None and node.pressure is not None:
-                    # Calculate pump gain if present
+                    # Calculate pump gain if present at current node
                     pump_gain = self.dp_service.calculate_node_pressure_gain(node, node.pressure)
-                    upstream_pressure = node.pressure + pump_gain
+                    
+                    # If current node is a pump, update its pressure to discharge pressure
+                    if pump_gain > 0:
+                        discharge_pressure = node.pressure + pump_gain
+                        node.pressure = discharge_pressure
+                        upstream_pressure = discharge_pressure
+                    else:
+                        upstream_pressure = node.pressure
                     
                     # Set downstream pressure
                     next_node.pressure = upstream_pressure - dp

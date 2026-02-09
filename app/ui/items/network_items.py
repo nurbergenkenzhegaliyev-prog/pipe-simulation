@@ -68,9 +68,13 @@ class NodeItem(QGraphicsEllipseItem):
         else:
             if getattr(self, "is_pump", False):
                 ratio = getattr(self, "pressure_ratio", None)
+                pump_pressure = getattr(self, "pressure", None)
                 text = f"{self.node_id}\n(Pump)"
                 if ratio is not None:
                     text = f"{self.node_id}\n(Pump x{ratio:.2f})"
+                # Show discharge pressure if calculated
+                if pump_pressure is not None:
+                    text += f"\nP={pump_pressure/1e5:.2f} bar"
                 self.label.setPlainText(text)
             elif getattr(self, "is_valve", False):
                 k = getattr(self, "valve_k", None)
@@ -95,8 +99,12 @@ class NodeItem(QGraphicsEllipseItem):
     def _update_tooltip(self):
         if getattr(self, "is_pump", False):
             ratio = getattr(self, "pressure_ratio", None)
+            pressure = getattr(self, "pressure", None)
             ratio_text = f"x{ratio:.3f}" if ratio is not None else "n/a"
-            self.setToolTip(f"{self.node_id}\nPump\nPressure ratio = {ratio_text}")
+            tooltip_text = f"{self.node_id}\nPump\nPressure ratio = {ratio_text}"
+            if pressure is not None:
+                tooltip_text += f"\nDischarge P = {pressure/1e5:.2f} bar ({pressure:,.0f} Pa)"
+            self.setToolTip(tooltip_text)
         elif getattr(self, "is_valve", False):
             k = getattr(self, "valve_k", None)
             k_text = f"{k:.3f}" if k is not None else "n/a"
