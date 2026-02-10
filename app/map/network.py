@@ -37,3 +37,51 @@ class PipeNetwork:
             p for p in self.pipes.values()
             if p.end_node == node_id
         ]
+    
+    def get_connected_pipes(self, node_id: str):
+        """Get all pipes connected to a node (both incoming and outgoing).
+        
+        Args:
+            node_id: ID of the node
+            
+        Returns:
+            List of pipes connected to the node
+        """
+        return [
+            p for p in self.pipes.values()
+            if p.start_node == node_id or p.end_node == node_id
+        ]
+    
+    def remove_node(self, node_id: str):
+        """Remove a node from the network.
+        
+        Args:
+            node_id: ID of the node to remove
+        """
+        if node_id in self.nodes:
+            del self.nodes[node_id]
+    
+    def remove_pipe(self, pipe_id: str):
+        """Remove a pipe from the network.
+        
+        Args:
+            pipe_id: ID of the pipe to remove
+        """
+        if pipe_id in self.pipes:
+            del self.pipes[pipe_id]
+    
+    def get_source_nodes(self):
+        """Get all source nodes in the network.
+        
+        Returns:
+            List of nodes marked as sources (is_source=True)
+        """
+        return [node for node in self.nodes.values() if node.is_source]
+    
+    def get_sink_nodes(self):
+        """Get all sink nodes in the network.
+        
+        Returns:
+            List of nodes marked as sinks (is_sink=True)
+        """
+        return [node for node in self.nodes.values() if node.is_sink]

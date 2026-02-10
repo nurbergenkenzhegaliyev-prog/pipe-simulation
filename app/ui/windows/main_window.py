@@ -1,11 +1,11 @@
 import json
 
 from PyQt6.QtWidgets import (
-    QMainWindow, QWidget, QHBoxLayout, QSplitter,
-    QStatusBar, QMessageBox, QDialog, QFileDialog
+    QMainWindow, QWidget, QHBoxLayout, QVBoxLayout, QSplitter,
+    QStatusBar, QMessageBox, QDialog, QFileDialog, QTextEdit
 )
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QAction, QKeySequence
+from PyQt6.QtGui import QAction, QKeySequence, QTextCursor
 
 from app.ui.tooling.tool_types import Tool
 from app.models.fluid import Fluid
@@ -54,6 +54,9 @@ class MainWindow(QMainWindow):
         self._results_manager = ResultsDialogManager(self, self.results_view)
         self._serializer = SceneSerializer()
         self._validator = SceneValidator()
+        self._last_transient_config = None
+        self._transient_log_dialog = None
+        self._transient_log_view = None
         
         # Initialize pipe analyzer with current fluid
         pressure_service = PressureDropService(self.current_fluid)
@@ -136,14 +139,22 @@ class MainWindow(QMainWindow):
         # Get available pipes and nodes from scene
         pipe_ids = [pipe.pipe_id for pipe in self.scene.pipes]
         node_ids = [node.node_id for node in self.scene.nodes]
+        pump_ids = [node.node_id for node in self.scene.nodes if getattr(node, "is_pump", False)]
         
         # Show transient configuration dialog
-        dialog = TransientSimulationDialog(available_pipes=pipe_ids, available_nodes=node_ids, parent=self)
+        dialog = TransientSimulationDialog(
+            available_pipes=pipe_ids,
+            available_nodes=node_ids,
+            available_pumps=pump_ids,
+            initial_config=self._last_transient_config,
+            parent=self,
+        )
         if dialog.exec() != QDialog.DialogCode.Accepted:
             return
         
         # Get configuration
         config = dialog.get_configuration()
+        self._last_transient_config = config
         
         # Update controller with current fluid
         self.controller.set_fluid(self.current_fluid)
@@ -151,7 +162,31 @@ class MainWindow(QMainWindow):
         # Run transient simulation
         self.statusBar().showMessage("Running transient simulation...", 0)
         try:
-            results = self.controller.run_transient_simulation(config)
+            shown_events = set()
+
+            self._ensure_transient_log_window()
+            self._clear_transient_log()
+            self._transient_log_dialog.show()
+
+            def on_event_applied(event, time_s, value):
+                target = event.node_id or event.pipe_id or "unknown"
+                key = (event.event_type, target)
+                if key in shown_events:
+                    return
+                shown_events.add(key)
+                self.statusBar().showMessage(
+                    f"Transient event applied: {event.event_type} on {target} at t={time_s:.2f}s",
+                    5000,
+                )
+                if event.event_type == "demand_change":
+                    self._append_transient_log(
+                        f"t={time_s:.2f}s demand_change target={target} value={value:.6g}\n"
+                    )
+
+            results = self.controller.run_transient_simulation(
+                config,
+                event_callback=on_event_applied,
+            )
             self.statusBar().showMessage(
                 f"Transient simulation complete: {len(results)} time steps", 3000
             )
@@ -312,6 +347,30 @@ class MainWindow(QMainWindow):
             self.statusBar().showMessage("Simulation complete. Network colored by pressure and flow.", 5000)
         except Exception as exc:
             QMessageBox.critical(self, "Simulation failed", str(exc))
+
+    def _ensure_transient_log_window(self) -> None:
+        if self._transient_log_dialog is not None:
+            return
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Transient Demand Change Log")
+        dialog.resize(520, 300)
+
+        layout = QVBoxLayout(dialog)
+        log_view = QTextEdit()
+        log_view.setReadOnly(True)
+        layout.addWidget(log_view)
+
+        self._transient_log_dialog = dialog
+        self._transient_log_view = log_view
+
+    def _clear_transient_log(self) -> None:
+        if self._transient_log_view is not None:
+            self._transient_log_view.clear()
+
+    def _append_transient_log(self, text: str) -> None:
+        if self._transient_log_view is not None:
+            self._transient_log_view.moveCursor(QTextCursor.MoveOperation.End)
+            self._transient_log_view.insertPlainText(text)
 
     def _validate_scene(self) -> bool:
         issues = self._validator.validate(self.scene, self.current_fluid)

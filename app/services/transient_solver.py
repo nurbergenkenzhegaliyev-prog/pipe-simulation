@@ -199,6 +199,7 @@ class TransientSolver:
         total_time: float,
         events: Optional[list[TransientEvent]] = None,
         callback: Optional[Callable[[TransientResult], None]] = None,
+        event_callback: Optional[Callable[[TransientEvent, float, float], None]] = None,
     ) -> list[TransientResult]:
         """Run transient simulation for specified duration.
         
@@ -243,7 +244,7 @@ class TransientSolver:
             time = step * self.time_step
             
             # Apply transient events at this time
-            self._apply_events(network, time, events)
+            self._apply_events(network, time, events, event_callback)
             
             # Solve steady-state for this time snapshot
             from app.services.solvers import NetworkSolver
@@ -265,10 +266,10 @@ class TransientSolver:
             if callback:
                 callback(result)
             
-            # Check for steady-state convergence
-            if step > 10 and self._is_steady_state(step):
-                logger.info(f"Reached steady state at t={time:.3f}s (step {step})")
-                break
+            # Note: Early stopping due to steady-state convergence is disabled
+            # to ensure the full requested simulation time is always completed.
+            # This ensures users get the full time-series data they requested,
+            # which is important for verification and validation purposes.
         
         logger.info(f"Transient simulation complete: {len(self.results)} time steps")
         return self.results
@@ -278,6 +279,7 @@ class TransientSolver:
         network: PipeNetwork,
         time: float,
         events: list[TransientEvent],
+        event_callback: Optional[Callable[[TransientEvent, float, float], None]] = None,
     ) -> None:
         """Apply transient events at the current time.
         
@@ -298,11 +300,37 @@ class TransientSolver:
             current_value = event.start_value + progress * (event.end_value - event.start_value)
             
             # Apply event based on type
-            if event.event_type == 'pump_ramp' and event.pipe_id:
-                pipe = network.pipes.get(event.pipe_id)
-                if pipe:
-                    # Ramp pump head or flow multiplier
-                    setattr(pipe, 'pump_multiplier', current_value)
+            if event.event_type in ['pump_ramp', 'pump_trip']:
+                if event.pipe_id:
+                    pipe = network.pipes.get(event.pipe_id)
+                    if pipe:
+                        # Ramp pump head or flow multiplier for pipe-based pumps
+                        setattr(pipe, 'pump_multiplier', current_value)
+                        logger.debug(
+                            "Transient pump event applied to pipe %s at t=%.3f: multiplier=%.3f",
+                            event.pipe_id,
+                            time,
+                            current_value,
+                        )
+                        if event_callback:
+                            event_callback(event, time, current_value)
+                elif event.node_id:
+                    node = network.nodes.get(event.node_id)
+                    if node and getattr(node, 'pressure_ratio', None) is not None:
+                        # Ramp pump gain for node-based pumps
+                        base_ratio = getattr(node, '_base_pressure_ratio', None)
+                        if base_ratio is None:
+                            base_ratio = node.pressure_ratio
+                            setattr(node, '_base_pressure_ratio', base_ratio)
+                        node.pressure_ratio = 1.0 + (base_ratio - 1.0) * current_value
+                        logger.debug(
+                            "Transient pump event applied to node %s at t=%.3f: ratio=%.3f",
+                            event.node_id,
+                            time,
+                            node.pressure_ratio,
+                        )
+                        if event_callback:
+                            event_callback(event, time, current_value)
                     
             elif event.event_type in ['valve_opening', 'valve_closure'] and event.pipe_id:
                 pipe = network.pipes.get(event.pipe_id)
@@ -323,12 +351,16 @@ class TransientSolver:
                     # More accurate: use Cv curves
                     effective_opening = max(0.01, current_value)  # Minimum 1% to avoid division by zero
                     pipe.diameter = original_diameter * math.sqrt(effective_opening)
+                    if event_callback:
+                        event_callback(event, time, current_value)
                     
             elif event.event_type == 'demand_change' and event.node_id:
                 node = network.nodes.get(event.node_id)
                 if node:
-                    # Change demand at node
-                    setattr(node, 'demand', current_value)
+                    # Change demand by updating flow_rate (used by solver/propagator)
+                    node.flow_rate = current_value
+                    if event_callback:
+                        event_callback(event, time, current_value)
                     
             elif event.event_type == 'pressure_change' and event.node_id:
                 node = network.nodes.get(event.node_id)
@@ -336,10 +368,14 @@ class TransientSolver:
                     # Change fixed pressure at source node
                     node.fixed_pressure = current_value
                     node.pressure = current_value
+                    if event_callback:
+                        event_callback(event, time, current_value)
                     
             elif event.callback:
                 # Custom event callback
                 event.callback(network, current_value, event)
+                if event_callback:
+                    event_callback(event, time, current_value)
     
     def _collect_results(
         self,

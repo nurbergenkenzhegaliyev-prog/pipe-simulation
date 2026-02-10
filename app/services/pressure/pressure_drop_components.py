@@ -144,7 +144,8 @@ class MultiPhasePressureDrop:
             dp_friction += pipe.valve.pressure_drop(rho_m, vm)
         if pipe.pump_curve is not None:
             total_q = pipe.liquid_flow_rate + pipe.gas_flow_rate
-            dp_friction -= pipe.pump_curve.pressure_gain(total_q)
+            multiplier = getattr(pipe, "pump_multiplier", 1.0)
+            dp_friction -= pipe.pump_curve.pressure_gain(total_q) * multiplier
 
         pipe.pressure_drop = dp_friction
         return dp_friction

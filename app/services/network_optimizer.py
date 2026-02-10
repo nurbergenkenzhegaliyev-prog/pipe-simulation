@@ -119,16 +119,16 @@ class NetworkOptimizer:
     def __init__(
         self,
         dp_service: PressureDropService,
-        solver: Optional[NetworkPressureSolver] = None,
+        solver: Optional[NetworkSolver] = None,
     ):
         """Initialize the network optimizer.
         
         Args:
             dp_service: Pressure drop service for calculations
-            solver: Optional custom network solver (default: NetworkPressureSolver)
+            solver: Optional custom network solver (default: NetworkSolver)
         """
         self.dp_service = dp_service
-        self.solver = solver or NetworkPressureSolver(dp_service)
+        self.solver = solver or NetworkSolver(dp_service)
         self.last_result: Optional[OptimizationResult] = None
         self._baseline_pump_flows: Optional[dict[str, float]] = None
         

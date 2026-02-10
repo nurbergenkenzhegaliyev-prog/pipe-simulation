@@ -388,7 +388,14 @@ class SimulationSettingsDialog(QDialog):
 class TransientSimulationDialog(QDialog):
     """Dialog for configuring transient simulation parameters and events."""
     
-    def __init__(self, available_pipes: list = None, available_nodes: list = None, parent=None):
+    def __init__(
+        self,
+        available_pipes: list = None,
+        available_nodes: list = None,
+        available_pumps: list = None,
+        initial_config: dict | None = None,
+        parent=None,
+    ):
         super().__init__(parent)
         self.setWindowTitle("Transient Simulation Settings")
         self.setMinimumWidth(700)
@@ -396,7 +403,9 @@ class TransientSimulationDialog(QDialog):
         
         self.available_pipes = available_pipes or []
         self.available_nodes = available_nodes or []
+        self.available_pumps = available_pumps or []
         self.events_data = []
+        self._initial_config = initial_config
         
         # Create UI
         layout = QVBoxLayout(self)
@@ -460,6 +469,41 @@ class TransientSimulationDialog(QDialog):
         
         # Dialog buttons
         layout.addWidget(DialogUiFactory.create_button_box(self))
+
+        if self._initial_config:
+            self._load_config(self._initial_config)
+
+    def _load_config(self, config: dict) -> None:
+        self.total_time_spin.setValue(float(config.get("total_time", 10.0)))
+        self.time_step_spin.setValue(float(config.get("time_step", 0.01)))
+        self.wave_speed_spin.setValue(float(config.get("wave_speed", 1000.0)))
+
+        self.events_table.setRowCount(0)
+        self.events_data = []
+
+        for event in config.get("events", []):
+            row = self.events_table.rowCount()
+            self.events_table.insertRow(row)
+
+            event_type = event.get("type", "").strip()
+            type_item = QTableWidgetItem(event_type.replace("_", " ").title())
+            type_item.setFlags(type_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
+            self.events_table.setItem(row, 0, type_item)
+
+            self.events_table.setItem(row, 1, QTableWidgetItem(str(event.get("time", 0.0))))
+            self.events_table.setItem(row, 2, QTableWidgetItem(str(event.get("duration", 1.0))))
+            self.events_table.setItem(row, 3, QTableWidgetItem(str(event.get("target", ""))))
+            self.events_table.setItem(row, 4, QTableWidgetItem(str(event.get("from_value", 0.0))))
+            self.events_table.setItem(row, 5, QTableWidgetItem(str(event.get("to_value", 0.0))))
+
+            self.events_data.append({
+                "type": event_type,
+                "time": float(event.get("time", 0.0)),
+                "duration": float(event.get("duration", 1.0)),
+                "target": str(event.get("target", "")),
+                "from_value": float(event.get("from_value", 0.0)),
+                "to_value": float(event.get("to_value", 0.0)),
+            })
     
     def _add_event(self, event_type: str):
         """Add a new transient event to the table."""
@@ -479,8 +523,13 @@ class TransientSimulationDialog(QDialog):
         self.events_table.setItem(row, 2, QTableWidgetItem(default_duration))
         
         # Target (pipe or node ID)
-        if event_type in ["valve_closure", "pump_trip"]:
+        if event_type == "valve_closure":
             target = self.available_pipes[0] if self.available_pipes else "pipe_1"
+        elif event_type == "pump_trip":
+            if self.available_pumps:
+                target = self.available_pumps[0]
+            else:
+                target = self.available_pipes[0] if self.available_pipes else "pipe_1"
         else:
             target = self.available_nodes[0] if self.available_nodes else "node_1"
         self.events_table.setItem(row, 3, QTableWidgetItem(target))

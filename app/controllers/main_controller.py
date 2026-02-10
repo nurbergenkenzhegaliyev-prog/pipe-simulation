@@ -1,3 +1,5 @@
+from typing import Callable
+
 from app.map.network import PipeNetwork
 from app.map.node import Node
 from app.map.pipe import Pipe
@@ -70,7 +72,11 @@ class MainController:
 
         return network  # now contains results (pressures & dp)
     
-    def run_transient_simulation(self, config: dict):
+    def run_transient_simulation(
+        self,
+        config: dict,
+        event_callback: Callable[[TransientEvent, float, float], None] | None = None,
+    ):
         """Run a transient simulation with the specified configuration.
         
         Args:
@@ -107,9 +113,20 @@ class MainController:
             event_type = event_dict['type']
             
             # Determine node_id or pipe_id based on event type
-            if event_type in ['valve_closure', 'valve_opening', 'pump_trip', 'pump_ramp']:
+            if event_type in ['valve_closure', 'valve_opening']:
                 pipe_id = event_dict['target']
                 node_id = None
+            elif event_type in ['pump_trip', 'pump_ramp']:
+                target = event_dict['target']
+                if target in network.nodes:
+                    node_id = target
+                    pipe_id = None
+                elif target in network.pipes:
+                    pipe_id = target
+                    node_id = None
+                else:
+                    pipe_id = target
+                    node_id = None
             else:  # demand_change, pressure_change
                 node_id = event_dict['target']
                 pipe_id = None
@@ -130,6 +147,7 @@ class MainController:
             network=network,
             total_time=config.get('total_time', 10.0),
             events=events,
+            event_callback=event_callback,
         )
         
         return results
