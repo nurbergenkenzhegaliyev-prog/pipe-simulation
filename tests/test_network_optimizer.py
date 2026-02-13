@@ -17,7 +17,7 @@ from app.map.pipe import Pipe
 from app.models.fluid import Fluid
 from app.models.equipment import PumpCurve, Valve
 from app.services.pressure import PressureDropService
-from app.services.network_optimizer import (
+from app.services.optimization import (
     NetworkOptimizer,
     ObjectiveType,
     OptimizationConstraint,

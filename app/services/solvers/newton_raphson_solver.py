@@ -15,7 +15,7 @@ import math
 
 if TYPE_CHECKING:
     from app.map.network import PipeNetwork
-    from app.services.pressure_drop_service import PressureDropService
+    from app.services.pressure import PressureDropService
 
 logger = logging.getLogger(__name__)
 

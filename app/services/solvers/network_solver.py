@@ -17,7 +17,7 @@ from app.services.solvers.pressure_propagation import PressurePropagation
 
 if TYPE_CHECKING:
     from app.map.network import PipeNetwork
-    from app.services.pressure_drop_service import PressureDropService
+    from app.services.pressure import PressureDropService
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +44,7 @@ class NetworkSolver:
         propagator: Pressure propagation component
         
     Example:
-        >>> from app.services.pressure.pressure_drop_service import PressureDropService
+        >>> from app.services.pressure import PressureDropService
         >>> from app.models.fluid import Fluid
         >>> 
         >>> fluid = Fluid(density=998.0, viscosity=1e-3)

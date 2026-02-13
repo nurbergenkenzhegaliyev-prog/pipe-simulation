@@ -86,6 +86,7 @@ class HomeTabActions:
     fluid_action: QAction
     simulation_settings_action: QAction
     transient_action: QAction
+    gis_action: QAction
 
 
 class HomeTabBuilder:
@@ -135,6 +136,9 @@ class HomeTabBuilder:
         simulation_settings_action = settings_toolbar.addAction(
             self._owner.style().standardIcon(QStyle.StandardPixmap.SP_FileDialogDetailedView), "Simulation Settings"
         )
+        gis_action = settings_toolbar.addAction(
+            self._owner.style().standardIcon(QStyle.StandardPixmap.SP_DriveNetIcon), "GIS"
+        )
 
         self._groups.mark_inactive_action(file_toolbar, new_action)
 
@@ -156,6 +160,7 @@ class HomeTabBuilder:
             fluid_action=fluid_action,
             simulation_settings_action=simulation_settings_action,
             transient_action=transient_action,
+            gis_action=gis_action,
         )
 
 

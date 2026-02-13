@@ -17,7 +17,7 @@ from app.map.pipe import Pipe
 from app.models.fluid import Fluid
 from app.models.equipment import PumpCurve
 from app.services.pressure import PressureDropService
-from app.services.transient_solver import (
+from app.services.transient import (
     TransientEvent,
     TransientResult,
     TransientSolver,

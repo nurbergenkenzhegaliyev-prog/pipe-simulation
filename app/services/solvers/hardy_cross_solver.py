@@ -7,7 +7,7 @@ from typing import Sequence, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from app.map.network import PipeNetwork
-    from app.services.pressure_drop_service import PressureDropService
+    from app.services.pressure import PressureDropService
     from app.services.solvers.cycle_finder import Cycle
 
 

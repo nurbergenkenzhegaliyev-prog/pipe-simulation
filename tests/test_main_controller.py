@@ -16,7 +16,7 @@ from PyQt6.QtWidgets import QGraphicsScene
 from app.controllers.main_controller import MainController
 from app.models.fluid import Fluid
 from app.services.solvers import SolverMethod
-from app.services.transient_solver import TransientEvent
+from app.services.transient import TransientEvent
 from app.map.network import PipeNetwork
 from app.map.node import Node
 from app.map.pipe import Pipe

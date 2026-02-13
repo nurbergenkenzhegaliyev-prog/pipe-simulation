@@ -6,7 +6,7 @@ from app.map.pipe import Pipe
 from app.models.fluid import Fluid
 from app.services.pressure import PressureDropService
 from app.services.solvers import NetworkSolver, SolverMethod
-from app.services.transient_solver import TransientSolver, TransientEvent, WaterHammerParams
+from app.services.transient import TransientSolver, TransientEvent, WaterHammerParams
 
 
 class MainController:

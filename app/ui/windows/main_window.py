@@ -14,7 +14,7 @@ from app.ui.views import TopTabsWidget, LeftPanelWidget, WorkspaceWidget, Result
 from app.ui.dialogs import FluidPropertiesDialog
 from app.ui.windows.main_window_components import ResultsDialogManager, SceneSerializer, SceneValidator
 from app.services.pressure import PressureDropService
-from app.services.pipe_point_analyzer import PipePointAnalyzer
+from app.services.analysis import PipePointAnalyzer
 from app.ui.visualization.network_visualizer import NetworkVisualizer
 from app.services.solvers import SolverMethod
 
@@ -49,6 +49,7 @@ class MainWindow(QMainWindow):
         self.top_tabs.fluid_settings_clicked.connect(self._show_fluid_settings)
         self.top_tabs.simulation_settings_clicked.connect(self._show_simulation_settings)
         self.top_tabs.transient_simulation_clicked.connect(self._show_transient_simulation)
+        self.top_tabs.gis_clicked.connect(self._show_gis)
 
         self.results_view = ResultsView()
         self._results_manager = ResultsDialogManager(self, self.results_view)
@@ -209,6 +210,9 @@ class MainWindow(QMainWindow):
             self.statusBar().showMessage(f"Transient simulation failed: {str(e)}", 5000)
             QMessageBox.critical(self, "Simulation Error", 
                                f"Transient simulation failed:\n{str(e)}")
+
+    def _show_gis(self):
+        self.workspace.show_gis_tab()
 
     def _serialize_scene(self):
         return self._serializer.serialize(self.scene)

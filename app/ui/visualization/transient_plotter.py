@@ -17,7 +17,7 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtCore import Qt
 
-from app.services.transient_solver import TransientResult
+from app.services.transient import TransientResult
 
 logger = logging.getLogger(__name__)
 
@@ -391,7 +391,7 @@ class TransientPlotWidget(QWidget):
         
         if filename:
             try:
-                from app.services.transient_solver import TransientSolver
+                from app.services.transient import TransientSolver
                 # Create temporary solver to use export method
                 # We'll export all data, user can filter in Excel
                 import csv

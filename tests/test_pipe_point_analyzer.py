@@ -10,7 +10,7 @@ Tests cover:
 
 import pytest
 
-from app.services.pipe_point_analyzer import PipePointAnalyzer, PipePointData
+from app.services.analysis import PipePointAnalyzer, PipePointData
 from app.services.pressure import PressureDropService
 from app.map.pipe import Pipe
 from app.models.fluid import Fluid

@@ -145,7 +145,7 @@ class TransientSolver:
         vapor_pressure: Vapor pressure for cavitation checks (Pa)
         
     Example:
-        >>> from app.services.pressure_drop_service import PressureDropService
+        >>> from app.services.pressure import PressureDropService
         >>> from app.models.fluid import Fluid
         >>> 
         >>> fluid = Fluid(density=998.0, viscosity=1e-3)

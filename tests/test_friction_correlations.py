@@ -6,7 +6,7 @@ values and verifies they produce reasonable results within expected ranges.
 
 import pytest
 import math
-from app.services.friction_correlations import (
+from app.services.pressure.friction_correlations import (
     FrictionFactorCalculator,
     FrictionCorrelation,
     get_correlation_info

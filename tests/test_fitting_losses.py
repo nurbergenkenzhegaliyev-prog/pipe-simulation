@@ -2,7 +2,7 @@
 
 import pytest
 
-from app.services.fitting_losses import (
+from app.services.pressure.fitting_losses import (
     FittingK,
     sum_minor_losses,
     elbow_k,
